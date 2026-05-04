@@ -1,4 +1,4 @@
-// infrastructure/repositories/ProductionRepository.js
+// infrastructures/repositories/ProductionRepository.js
 const ProductionOrderModel = require('../db/ProductionOrderModel');
 const Production           = require('../../domain/entities/Production');
 

@@ -1,5 +1,5 @@
-// infrastructure/controllers/supplierController.js
-const SupplierRepository = require('../repositories/SupplierRepository');
+// infrastructures/controllers/supplierController.js
+const SupplierRepository = require('../repositorie/SupplierRepository');
 const GetSuppliers       = require('../../application/use-cases/suppliers/GetSuppliers');
 const GetSupplierById    = require('../../application/use-cases/suppliers/GetSupplierById');
 const CreateSupplier     = require('../../application/use-cases/suppliers/CreateSupplier');

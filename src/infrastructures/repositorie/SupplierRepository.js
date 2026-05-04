@@ -1,4 +1,4 @@
-// infrastructure/repositories/SupplierRepository.js
+// infrastructures/repositories/SupplierRepository.js
 const SupplierModel = require('../db/SupplierModel');
 const Supplier      = require('../../domain/entities/Supplier');
 

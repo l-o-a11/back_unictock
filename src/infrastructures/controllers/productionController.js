@@ -1,5 +1,5 @@
-// infrastructure/controllers/productionController.js
-const ProductionRepository        = require('../repositories/ProductionRepository');
+// infrastructures/controllers/productionController.js
+const ProductionRepository        = require('../repositorie/ProductionRepository');
 const GetProductions               = require('../../application/use-cases/production/GetProductions');
 const GetProductionById            = require('../../application/use-cases/production/GetProductionById');
 const CreateProduction             = require('../../application/use-cases/production/CreateProduction');

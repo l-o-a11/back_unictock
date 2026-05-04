@@ -1,4 +1,4 @@
-// infrastructure/db/ProductionOrderModel.js
+// infrastructures/db/ProductionOrderModel.js
 const mongoose = require('mongoose');
 
 const ESTADOS_VALIDOS = [

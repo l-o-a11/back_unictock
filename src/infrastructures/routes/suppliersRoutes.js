@@ -1,4 +1,4 @@
-// infrastructure/routes/suppliersRoutes.js
+// infrastructures/routes/suppliersRoutes.js
 /**
  * Rutas de Proveedores
  *

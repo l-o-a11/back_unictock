@@ -1,4 +1,4 @@
-// infrastructure/routes/productionRoutes.js
+// infrastructures/routes/productionRoutes.js
 /**
  * Rutas de Producción
  *

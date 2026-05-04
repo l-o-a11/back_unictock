@@ -1,4 +1,4 @@
-// infrastructure/db/SupplierModel.js
+// infrastructures/db/SupplierModel.js
 const mongoose = require('mongoose');
 
 const supplierSchema = new mongoose.Schema(
