@@ -6,7 +6,11 @@ class ProductionRepository {
   _toEntity(doc) {
     if (!doc) return null;
     const obj = doc.toObject ? doc.toObject() : doc;
-    return new Production({ ...obj, id: obj._id.toString() });
+    return new Production({
+      ...obj,
+      id:             obj._id.toString(),
+      fecha_creacion: obj.fecha_creacion ?? obj.createdAt,  // timestamps usa createdAt
+    });
   }
 
   /**

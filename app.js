@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const productionRoutes = require('./src/infrastructures/routes/productionRoutes');
 const suppliersRoutes = require('./src/infrastructures/routes/suppliersRoutes');
+const productsRoutes = require('./src/infrastructures/routes/productsRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp:
 // API Routes - /api prefix for consistency
 app.use('/api/produccion', productionRoutes);
 app.use('/api/proveedores', suppliersRoutes);
+app.use('/api/products', productsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

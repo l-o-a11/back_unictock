@@ -23,7 +23,7 @@ const ctrl           = require('../controllers/supplierController');
 const { requireAuth } = require('../../interfaces/middlewares/authMiddleware');
 
 const router = Router();
-router.use(requireAuth);
+//router.use(requireAuth);
 
 router.get('/',                 ctrl.getSuppliers);
 router.get('/:id',              ctrl.getSupplierById);

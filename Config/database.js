@@ -1,15 +1,17 @@
+// Config/database.js
 const mongoose = require('mongoose');
-require('dotenv').config();
-
+ 
 const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error('Database connection error:', error.message);
-    process.exit(1);
+  const uri    = process.env.MONGO_URI;
+  const dbName = process.env.DATABASE_NAME || 'Unistock';
+ 
+  if (!uri) {
+    throw new Error('MONGO_URI is not defined in environment variables');
   }
+ 
+  await mongoose.connect(uri, { dbName });
+  console.log(` MongoDB connected → ${dbName}`);
 };
-
+ 
 module.exports = connectDB;
-
+ 

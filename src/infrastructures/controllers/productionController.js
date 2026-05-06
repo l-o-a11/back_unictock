@@ -34,7 +34,9 @@ const getEstados = (_req, res) => ok(res, Production.ESTADOS_VALIDOS);
 const getOrderById = async (req, res) => {
   try {
     const data = await new GetProductionById(repo).execute(req.params.id);
-    return ok(res, data);
+    // Incluir detalles vacíos para compatibilidad con el frontend
+    // (el Backend no maneja detalles de línea todavía)
+    return ok(res, { ...data, detalles: [] });
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
     return serverError(res);

@@ -32,7 +32,7 @@ const ctrl            = require('../controllers/productionController');
 const { requireAuth } = require('../../interfaces/middlewares/authMiddleware');
 
 const router = Router();
-router.use(requireAuth);
+router.use(requireAuth); // ✅ Necesario: asigna req.user (dev-user en dev, JWT en prod)
 
 // Rutas fijas primero (antes de /:id)
 router.get('/ordenes/estados',      ctrl.getEstados);
