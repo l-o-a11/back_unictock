@@ -1,3 +1,4 @@
+
 // application/use-cases/products/GetProducts.js
 
 class GetProducts {

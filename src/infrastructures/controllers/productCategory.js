@@ -1,4 +1,4 @@
-/**
+ /**
  * productCategoryController.js
  *
  * Controlador para Categorías de Productos (Backend estilo use-cases).
@@ -7,17 +7,17 @@
  * @author Unistock Team
  */
 
-const ProductCategoryRepository = require("../repositories/ProductCategoryRepository");
+const ProductCategoryRepository = require("../repositorie/ProductCategoryRepository");
 
 // Use Cases
-const GetProductCategories     = require("../../application/use-cases/product-categories/GetProductCategories");
-const GetProductCategoryById   = require("../../application/use-cases/product-categories/GetProductCategoryById");
-const CreateProductCategory    = require("../../application/use-cases/product-categories/CreateProductCategory");
-const UpdateProductCategory    = require("../../application/use-cases/product-categories/UpdateProductCategory");
-const DeleteProductCategory    = require("../../application/use-cases/product-categories/DeleteProductCategory");
+const GetProductCategories     = require("../../application/use-cases/productCategory/GetProductCategories");
+const GetProductCategoryById   = require("../../application/use-cases/productCategory/GetProductCategoryById");
+const CreateProductCategory    = require("../../application/use-cases/productCategory/CreateProductCategory");
+const UpdateProductCategory    = require("../../application/use-cases/productCategory/UpdateProductCategory");
+const DeleteProductCategory    = require("../../application/use-cases/productCategory/DeleteProductCategory");
 
 // (Opcional para validación de eliminación)
-const ProductRepository = require("../repositories/ProductRepository");
+const ProductRepository = require("../repositorie/ProductRepository");
 
 const {
   ok,

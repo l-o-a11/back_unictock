@@ -1,3 +1,4 @@
+
 // application/use-cases/products/DeleteProduct.js
 
 class DeleteProduct {

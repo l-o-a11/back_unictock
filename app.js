@@ -3,9 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const productCategoryRoutes = require('./src/infrastructures/routes/productCategoryRoutes');
-const productRoutes = require('./src/infrastructures/routes/productRoutes');
+
 const productionRoutes = require('./src/infrastructures/routes/productionRoutes');
 const suppliersRoutes = require('./src/infrastructures/routes/suppliersRoutes');
+const productsRoutes = require('./src/infrastructures/routes/productsRoutes');
 
 const app = express();
 
@@ -20,9 +21,10 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp:
 
 // API Routes - /api prefix for consistency
 app.use('/api/product-categories', require('./src/infrastructures/routes/productCategoryRoutes'));
-app.use('/api/products', require('./src/infrastructures/routes/productRoutes'));
+app.use('/api/products', require('./src/infrastructures/routes/productsRoutes'));
 app.use('/api/produccion', productionRoutes);
 app.use('/api/proveedores', suppliersRoutes);
+app.use('/api/products', productsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

@@ -6,14 +6,14 @@ class CreateSupplier {
   }
 
   async execute(data) {
-    const {
-      nit,
+    const { nit,
       nombre_de_empresa,
       nombre_del_contacto,
       direccion,
       telefono,
       correo,
       sitio_web,
+      activo
     } = data;
 
     // Validación de campos requeridos

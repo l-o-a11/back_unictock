@@ -1,131 +1,227 @@
-// infrastructures/controllers/productionController.js
-const ProductionRepository        = require('../repositorie/ProductionRepository');
-const GetProductions               = require('../../application/use-cases/production/GetProductions');
-const GetProductionById            = require('../../application/use-cases/production/GetProductionById');
-const CreateProduction             = require('../../application/use-cases/production/CreateProduction');
-const UpdateProduction             = require('../../application/use-cases/production/UpdateProduction');
-const AnularProduction             = require('../../application/use-cases/production/AnularProduction');
-const CambiarEstadoProduction      = require('../../application/use-cases/production/CambiarEstadoProduction');
-const GetCalendarioProduction      = require('../../application/use-cases/production/GetCalendarioProduction');
-const GetAlertasProduction         = require('../../application/use-cases/production/GetAlertasProduction');
-const Production                   = require('../../domain/entities/Production');
-const {
-  ok, created, badRequest, notFound, unprocessable, unauthorized, serverError,
-} = require('../../shared/utils/response');
+// ─────────────────────────────────────────────────────────────────────────────
+// src/infrastructure/controllers/productionController.js
+// ─────────────────────────────────────────────────────────────────────────────
 
-const repo = new ProductionRepository();
+const ProductionRepository            = require("../repositorie/ProductionRepository");
+const ProductionOrderDetailRepository = require("../repositorie/ProductionOrderDetailRepository");
+const ThirdPartyAssignmentRepository  = require("../repositorie/ThirdPartyAssignmentRepository");
 
-// ── GET /produccion/ordenes ───────────────────────────────────────────────────
-// ?search=  ?estado=  ?id_usuario=  ?fecha_desde=  ?fecha_hasta=
-// ?page=    ?limit=   ?sortBy=      ?order=
+const AnularProduction       = require("../../application/use-cases/production/AnularProduction");
+const CambiarEstadoProduction = require("../../application/use-cases/production/CambiarEstadoProduction");
+const CreateOrderDetail      = require("../../application/use-cases/production/CreateOrderDetail");
+const GetOrderDetails        = require("../../application/use-cases/production/GetOrderDetails");
+
+const Production = require("../../domain/entities/Production");
+const GetCalendarioProduction = require("../../application/use-cases/production/GetCalendarioProduction");
+const GetAlertasProduction    = require("../../application/use-cases/production/GetAlertasProduction");
+const GetProductions          = require("../../application/use-cases/production/GetProductions");
+
+const { ok, created, badRequest, notFound, serverError } = require("../../shared/utils/response");
+
+const prodRepo       = new ProductionRepository();
+const detailRepo     = new ProductionOrderDetailRepository();
+const assignmentRepo = new ThirdPartyAssignmentRepository();
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Devuelve serverError con el mensaje real en desarrollo,
+ * y genérico en producción.
+ */
+const handleError = (res, err) => {
+  console.error("[ProductionController]", err);
+  const msg = process.env.NODE_ENV !== "production" ? err.message : undefined;
+  return serverError(res, msg);
+};
+
+// ── Órdenes ───────────────────────────────────────────────────────────────────
+
 const getOrders = async (req, res) => {
   try {
-    const result = await new GetProductions(repo).execute(req.query);
-    return ok(res, result);
+    const orders = await prodRepo.findAll(req.query);
+    return ok(res, orders.map((o) => o.toJSON()));
   } catch (err) {
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
-// ── GET /produccion/ordenes/estados ──────────────────────────────────────────
-const getEstados = (_req, res) => ok(res, Production.ESTADOS_VALIDOS);
-
-// ── GET /produccion/ordenes/:id ───────────────────────────────────────────────
 const getOrderById = async (req, res) => {
   try {
-    const data = await new GetProductionById(repo).execute(req.params.id);
-    return ok(res, data);
+    const order = await prodRepo.findById(req.params.id);
+    if (!order) return notFound(res, "Orden no encontrada");
+    const details = await detailRepo.findAll({ id_orden: req.params.id });
+    return ok(res, { ...order.toJSON(), detalles: details.map((d) => d.toJSON()) });
   } catch (err) {
-    if (err.statusCode === 404) return notFound(res, err.message);
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
-// ── POST /produccion/ordenes ──────────────────────────────────────────────────
 const createOrder = async (req, res) => {
   try {
-    const id_usuario = req.user?.id;
-    const data = await new CreateProduction(repo).execute(req.body, id_usuario);
-    return created(res, data);
+    const { fecha_entrega, cliente, id_usuario } = req.body;
+    const userId = id_usuario || req.user?.id || "anonymous";
+
+    if (!fecha_entrega || !cliente)
+      return badRequest(res, "Los campos fecha_entrega y cliente son requeridos");
+
+    const order = await prodRepo.create({
+      fecha_entrega,
+      cliente,
+      id_usuario: userId,
+      estado: "Diseño",
+      historial: [{ estado: "Diseño", fecha: new Date(), id_usuario: userId, motivo: null }],
+    });
+    return created(res, order.toJSON());
   } catch (err) {
-    if (err.statusCode === 400) return badRequest(res, err.message);
-    if (err.statusCode === 401) return unauthorized(res, err.message);
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
-// ── PUT /produccion/ordenes/:id ───────────────────────────────────────────────
 const updateOrder = async (req, res) => {
   try {
-    const data = await new UpdateProduction(repo).execute(req.params.id, req.body);
-    return ok(res, data);
+    const order = await prodRepo.findById(req.params.id);
+    if (!order) return notFound(res, "Orden no encontrada");
+
+    if (order.estaAnulada())
+      return badRequest(res, "No se puede editar una orden anulada");
+
+    const { estado, historial, motivo_anulacion, ...safeChanges } = req.body;
+    const updated = await prodRepo.update(req.params.id, safeChanges);
+    return ok(res, updated.toJSON());
   } catch (err) {
-    if (err.statusCode === 404) return notFound(res, err.message);
-    if (err.statusCode === 422) return unprocessable(res, err.message);
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
-// ── PATCH /produccion/ordenes/:id/anular ─────────────────────────────────────
-// Body: { motivo: "texto obligatorio" }
+// ── Anular orden ──────────────────────────────────────────────────────────────
+
 const anularOrder = async (req, res) => {
   try {
-    const id_usuario = req.user?.id;
-    const data = await new AnularProduction(repo).execute(req.params.id, req.body.motivo, id_usuario);
-    return ok(res, data);
+    const { motivo } = req.body;
+    const id_usuario = req.user?.id || null;
+
+    const useCase = new AnularProduction(prodRepo);
+    const result  = await useCase.execute(req.params.id, motivo, id_usuario);
+    return ok(res, result);
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
-    if (err.statusCode === 400) return badRequest(res, err.message);
-    if (err.statusCode === 422) return unprocessable(res, err.message);
-    return serverError(res);
+    if (err.statusCode === 400 || err.statusCode === 422) return badRequest(res, err.message);
+    return handleError(res, err);
   }
 };
 
-// ── PATCH /produccion/ordenes/:id/estado ─────────────────────────────────────
-// Body: { estado: "Corte" }
+// ── Cambiar estado ────────────────────────────────────────────────────────────
+
 const cambiarEstado = async (req, res) => {
   try {
-    const id_usuario = req.user?.id;
-    const data = await new CambiarEstadoProduction(repo).execute(req.params.id, req.body.estado, id_usuario);
-    return ok(res, data);
+    const { estado } = req.body;
+    const id_usuario = req.user?.id || null;
+
+    const useCase = new CambiarEstadoProduction(prodRepo);
+    const result  = await useCase.execute(req.params.id, estado, id_usuario);
+    return ok(res, result);
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
-    if (err.statusCode === 400) return badRequest(res, err.message);
-    if (err.statusCode === 422) return unprocessable(res, err.message);
-    return serverError(res);
+    if (err.statusCode === 400 || err.statusCode === 422) return badRequest(res, err.message);
+    return handleError(res, err);
   }
 };
 
-// ── GET /produccion/calendario ────────────────────────────────────────────────
-// ?desde=yyyy-mm-dd  ?hasta=yyyy-mm-dd  (ambos opcionales)
+// ── Estados válidos ───────────────────────────────────────────────────────────
+
+const getEstados = (_req, res) => {
+  return ok(res, Production.ESTADOS_VALIDOS);
+};
+
+// ── Detalles de orden ─────────────────────────────────────────────────────────
+
+const getOrderDetails = async (req, res) => {
+  try {
+    const useCase = new GetOrderDetails(detailRepo);
+    return ok(res, await useCase.execute(req.query));
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const createOrderDetail = async (req, res) => {
+  try {
+    // Parsear cantidad a número por si llega como string desde el form
+    const payload = {
+      ...req.body,
+      cantidad: req.body.cantidad !== undefined ? Number(req.body.cantidad) : undefined,
+    };
+
+    const useCase = new CreateOrderDetail(detailRepo, prodRepo);
+    const detail  = await useCase.execute(payload);
+    return created(res, detail);
+  } catch (err) {
+    if (err.statusCode === 400)  return badRequest(res, err.message);
+    if (err.statusCode === 404)  return notFound(res, err.message);
+    if (err.statusCode === 422)  return badRequest(res, err.message);
+    return handleError(res, err);
+  }
+};
+
+// ── Asignaciones ──────────────────────────────────────────────────────────────
+
+const getAssignments = async (req, res) => {
+  try {
+    return ok(res, await assignmentRepo.findAll(req.query));
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const createAssignment = async (req, res) => {
+  try {
+    const { id_orden, id_tercero, cantidad } = req.body;
+    if (!id_orden || !id_tercero || !cantidad)
+      return badRequest(res, "Los campos id_orden, id_tercero y cantidad son requeridos");
+    return created(res, await assignmentRepo.create({ id_orden, id_tercero, cantidad }));
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+
+// ── Calendario ────────────────────────────────────────────────────────────────
+
 const getCalendario = async (req, res) => {
   try {
     const { desde, hasta } = req.query;
-    const eventos = await new GetCalendarioProduction(repo).execute(desde, hasta);
-    return ok(res, eventos);
+    const useCase = new GetCalendarioProduction(prodRepo);
+    const result  = await useCase.execute(desde, hasta);
+    return ok(res, result);
   } catch (err) {
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
-// ── GET /produccion/alertas ───────────────────────────────────────────────────
+// ── Alertas ───────────────────────────────────────────────────────────────────
+
 const getAlertas = async (req, res) => {
   try {
-    const data = await new GetAlertasProduction(repo).execute();
-    return ok(res, data);
+    const useCase = new GetAlertasProduction(prodRepo);
+    const result  = await useCase.execute();
+    return ok(res, result);
   } catch (err) {
-    return serverError(res);
+    return handleError(res, err);
   }
 };
 
 module.exports = {
   getOrders,
-  getEstados,
   getOrderById,
   createOrder,
   updateOrder,
   anularOrder,
   cambiarEstado,
+  getEstados,
+  getOrderDetails,
+  createOrderDetail,
+  getAssignments,
+  createAssignment,
   getCalendario,
   getAlertas,
 };
