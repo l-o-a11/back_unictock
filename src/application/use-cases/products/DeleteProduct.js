@@ -1,19 +1,32 @@
-// src/application/use-cases/products/DeleteProduct.js
+
+// application/use-cases/products/DeleteProduct.js
 
 class DeleteProduct {
-  constructor(productRepository) {
-    this.productRepository = productRepository;
+  constructor(repo) {
+    this.repo = repo;
   }
 
   async execute(id) {
-    const existing = await this.productRepository.findById(id);
-    if (!existing) {
-      throw new Error('Producto no encontrado');
+    const product = await this.repo.findById(id);
+
+    if (!product) {
+      const err = new Error("Producto no encontrado");
+      err.statusCode = 404;
+      throw err;
     }
 
-    return await this.productRepository.delete(id);
+    const products = await this.productRepo.findByCategoryId(id);
+
+    if (products.length > 0) {
+      const err = new Error(
+        "No se puede eliminar porque tiene fichas técnicas asociadas"
+      );
+      err.statusCode = 422;
+      throw err;
+    }
+
+    return this.repo.delete(id);
   }
 }
 
 module.exports = DeleteProduct;
-

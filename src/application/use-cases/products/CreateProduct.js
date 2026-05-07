@@ -1,30 +1,39 @@
-// src/application/use-cases/products/CreateProduct.js
+// application/use-cases/products/CreateProduct.js
 
 class CreateProduct {
-  constructor(productRepository) {
-    this.productRepository = productRepository;
+  constructor(repo) {
+    this.repo = repo;
   }
 
   async execute(data) {
-    const { name, description, price, stock, category } = data;
-    
-    if (!name || !price) {
-      throw new Error('Nombre y precio son requeridos');
+    const {
+      nombre,
+      referencia,
+      precio,
+      stock,
+      id_categorias,
+      imagenes_Url,
+    } = data;
+
+    if (!nombre || !referencia || !precio || !stock || !id_categorias) {
+      const err = new Error("Campos obligatorios faltantes");
+      err.statusCode = 400;
+      throw err;
     }
 
-    if (price < 0) {
-      throw new Error('Precio no puede ser negativo');
-    }
-
-    return await this.productRepository.create({
-      name,
-      description,
-      price,
-      stock: stock || 0,
-      category: category || 'General'
+    return this.repo.create({
+      nombre,
+      referencia,
+      precio,
+      stock,
+      id_categorias,
+      imagenes_Url,
+      activo: true,
     });
   }
 }
 
+
 module.exports = CreateProduct;
+
 

@@ -1,39 +1,59 @@
-// src/domain/entities/Product.js
-
 class Product {
   constructor({
     id,
-    name,
-    description = '',
-    price,
-    stock = 0,
-    category = 'General',
-    active = true,
+    id_categoria,
+    imagenes_Url = [],
+    referencia,
+    nombre,
+    precio,
+    stock,
+    estado = true,
     createdAt,
-    updatedAt
-  } = {}) {
+    updatedAt,
+  }) {
     this.id = id;
-    this.name = name;
-    this.description = description;
-    this.price = price;
+    this.id_categoria = id_categoria;
+    this.imagenes_Url = imagenes_Url;
+    this.referencia = referencia;
+    this.nombre = nombre;
+    this.precio = precio;
     this.stock = stock;
-    this.category = category;
-    this.active = active;
-    this.createdAt = createdAt ? new Date(createdAt) : new Date();
-    this.updatedAt = updatedAt ? new Date(updatedAt) : new Date();
+    this.estado = estado;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 
-  update(data) {
-    const { name, description, price, stock, category, active } = data;
-    if (name !== undefined) this.name = name;
-    if (description !== undefined) this.description = description;
-    if (price !== undefined) this.price = price;
-    if (stock !== undefined) this.stock = stock;
-    if (category !== undefined) this.category = category;
-    if (active !== undefined) this.active = active;
-    this.updatedAt = new Date();
+  /**
+   * Alterna el estado del producto
+   */
+  toggleEstado() {
+    this.estado = !this.estado;
+  }
+
+  /**
+   * Valida si el producto tiene stock disponible
+   */
+  tieneStock() {
+    return this.stock > 0;
+  }
+
+  /**
+   * Representación pública (por si luego quieres ocultar cosas)
+   */
+  toJSON() {
+    return {
+      id: this.id,
+      id_categoria: this.id_categoria,
+      imagenes_Url: this.imagenes_Url,
+      referencia: this.referencia,
+      nombre: this.nombre,
+      precio: this.precio,
+      stock: this.stock,
+      estado: this.estado,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }
 
 module.exports = Product;
-

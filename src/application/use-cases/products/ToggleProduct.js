@@ -1,11 +1,11 @@
-// application/use-cases/products/UpdateProduct.js
+// application/use-cases/products/ToggleProduct.js
 
-class UpdateProduct {
+class ToggleProduct {
   constructor(repo) {
     this.repo = repo;
   }
 
-  async execute(id, data) {
+  async execute(id) {
     const product = await this.repo.findById(id);
 
     if (!product) {
@@ -14,8 +14,10 @@ class UpdateProduct {
       throw err;
     }
 
-    return this.repo.update(id, data);
+    const updated = await this.repo.toggleActivo(id);
+
+    return updated.toJSON();
   }
 }
 
-module.exports = UpdateProduct;
+module.exports = ToggleProduct;

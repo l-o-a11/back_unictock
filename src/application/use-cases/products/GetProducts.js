@@ -1,14 +1,14 @@
-// src/application/use-cases/products/GetProducts.js
+
+// application/use-cases/products/GetProducts.js
 
 class GetProducts {
-  constructor(productRepository) {
-    this.productRepository = productRepository;
+  constructor(repo) {
+    this.repo = repo;
   }
 
-  async execute(params = {}) {
-    return await this.productRepository.findAll(params);
+  async execute(query) {
+    return this.repo.findAll(query);
   }
 }
 
 module.exports = GetProducts;
-

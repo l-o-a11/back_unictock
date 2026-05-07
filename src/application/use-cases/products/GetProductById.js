@@ -1,18 +1,22 @@
-// src/application/use-cases/products/GetProductById.js
+
+// application/use-cases/products/GetProductById.js
 
 class GetProductById {
-  constructor(productRepository) {
-    this.productRepository = productRepository;
+  constructor(repo) {
+    this.repo = repo;
   }
 
   async execute(id) {
-    const product = await this.productRepository.findById(id);
+    const product = await this.repo.findById(id);
+
     if (!product) {
-      throw new Error('Producto no encontrado');
+      const err = new Error("Producto no encontrado");
+      err.statusCode = 404;
+      throw err;
     }
+
     return product;
   }
 }
 
 module.exports = GetProductById;
-
