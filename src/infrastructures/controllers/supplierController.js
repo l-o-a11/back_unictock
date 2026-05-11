@@ -27,13 +27,13 @@ const normalizeBody = (body) => ({
 });
 
 // ── GET /proveedores ──────────────────────────────────────────────────────────
-// Query params: search, nit, activo, page, limit, sortBy, order
 const getSuppliers = async (req, res) => {
   try {
     const result = await new GetSuppliers(repo).execute(req.query);
     return ok(res, result);
   } catch (err) {
-    return serverError(res);
+    console.error('GetSuppliers error:', err);
+    return serverError(res, err.message);
   }
 };
 
@@ -44,7 +44,8 @@ const getSupplierById = async (req, res) => {
     return ok(res, data);
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
-    return serverError(res);
+    console.error('GetSupplierById error:', err);
+    return serverError(res, err.message);
   }
 };
 
@@ -52,15 +53,15 @@ const getSupplierById = async (req, res) => {
 const createSupplier = async (req, res) => {
   try {
     console.log('POST /proveedores body:', JSON.stringify(req.body, null, 2));
-    const data = await new CreateSupplier(repo).execute(normalizeBody(req.body));
-    console.log('Supplier created:', data);
+    const normalized = normalizeBody(req.body);
+    console.log('POST /proveedores normalized:', JSON.stringify(normalized, null, 2));
+    const data = await new CreateSupplier(repo).execute(normalized);
     return created(res, data);
   } catch (err) {
-    console.error('CreateSupplier error:', err);
-    console.error('Stack:', err.stack);
+    console.error('CreateSupplier error:', err.message);
     if (err.statusCode === 400) return badRequest(res, err.message);
     if (err.statusCode === 409) return conflict(res, err.message);
-    return serverError(res, err.message || err.toString());
+    return serverError(res, err.message || 'Error interno al crear el proveedor');
   }
 };
 
@@ -70,9 +71,10 @@ const updateSupplier = async (req, res) => {
     const data = await new UpdateSupplier(repo).execute(req.params.id, normalizeBody(req.body));
     return ok(res, data);
   } catch (err) {
+    console.error('UpdateSupplier error:', err.message);
     if (err.statusCode === 404) return notFound(res, err.message);
     if (err.statusCode === 409) return conflict(res, err.message);
-    return serverError(res);
+    return serverError(res, err.message || 'Error interno al actualizar el proveedor');
   }
 };
 
@@ -82,9 +84,11 @@ const deleteSupplier = async (req, res) => {
     const data = await new DeleteSupplier(repo).execute(req.params.id);
     return ok(res, data);
   } catch (err) {
+    console.error('DeleteSupplier error:', err.message);
     if (err.statusCode === 404)  return notFound(res, err.message);
+    // 422 = tiene compras asociadas — el mensaje del use-case ya es descriptivo
     if (err.statusCode === 422)  return unprocessable(res, err.message);
-    return serverError(res);
+    return serverError(res, err.message || 'Error interno al eliminar el proveedor');
   }
 };
 
@@ -94,8 +98,9 @@ const toggleSupplier = async (req, res) => {
     const data = await new ToggleSupplier(repo).execute(req.params.id);
     return ok(res, data);
   } catch (err) {
+    console.error('ToggleSupplier error:', err.message);
     if (err.statusCode === 404) return notFound(res, err.message);
-    return serverError(res);
+    return serverError(res, err.message);
   }
 };
 
