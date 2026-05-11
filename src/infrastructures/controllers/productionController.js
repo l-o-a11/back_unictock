@@ -38,8 +38,17 @@ const handleError = (res, err) => {
 
 const getOrders = async (req, res) => {
   try {
-    const orders = await prodRepo.findAll(req.query);
-    return ok(res, orders.map((o) => o.toJSON()));
+    const result = await prodRepo.findAll(req.query);
+    // El repositorio devuelve { data: [...], total, page, limit, totalPages }
+    const data = result?.data || [];
+    const mappedOrders = Array.isArray(data) ? data.map((o) => o.toJSON?.() || o) : [];
+    return ok(res, {
+      data: mappedOrders,
+      total: result?.total || mappedOrders.length,
+      page: result?.page || 1,
+      limit: result?.limit || 10,
+      totalPages: result?.totalPages || 1,
+    });
   } catch (err) {
     return handleError(res, err);
   }
