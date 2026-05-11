@@ -3,7 +3,7 @@ const connectDB = require('./Config/database');
 const { seed }  = require('./Config/seed');
 const app       = require('./app');
 
-const PORT = process.env.PORT || 3020;
+const PORT = process.env.PORT || 3000;
 
 // Connect DB then start server
 connectDB()
