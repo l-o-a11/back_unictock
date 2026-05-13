@@ -1,3 +1,4 @@
+
 // application/use-cases/products/GetProductById.js
 
 class GetProductById {

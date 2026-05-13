@@ -1,4 +1,4 @@
-/**
+ /**
  * productCategoryController.js
  *
  * Controlador para Categorías de Productos (Backend estilo use-cases).
@@ -7,7 +7,7 @@
  * @author Unistock Team
  */
 
-const ProductCategoryRepository = require("../repositories/ProductCategoryRepository");
+const ProductCategoryRepository = require("../repositorie/ProductCategoryRepository");
 
 // Use Cases
 const GetProductCategories     = require("../../application/use-cases/productCategory/GetProductCategories");
@@ -17,7 +17,7 @@ const UpdateProductCategory    = require("../../application/use-cases/productCat
 const DeleteProductCategory    = require("../../application/use-cases/productCategory/DeleteProductCategory");
 
 // (Opcional para validación de eliminación)
-const ProductRepository = require("../repositories/ProductRepository");
+const ProductRepository = require("../repositorie/ProductRepository");
 
 const {
   ok,
