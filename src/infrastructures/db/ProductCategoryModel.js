@@ -4,9 +4,8 @@ const mongoose = require("mongoose");
 
 const productCategorySchema = new mongoose.Schema(
   {
-    id_categoria: { type: mongoose.Schema.Types.ObjectId, ref: "ProductCategory", required: true },
     nombre: { type: String, required: true, unique: true },
-    descripción: { type: String, required: true },
+    descripcion: { type: String, required: false },
     cantidad_productos: { type: Number, default: 0 },
     productos_disponibles: { type: Number, default: 0 },
     estado: { type: Boolean, default: true },
