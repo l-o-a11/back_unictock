@@ -11,21 +11,21 @@
  *   PATCH  /api/roles/:id/toggle       — Activar / inactivar
  */
 
-const RoleRepository      = require('../repositorie/roleRepository');
-const ModuleRepository    = require('../repositorie/ModuleRepository');
+const RoleRepository = require('../repositorie/roleRepository');
+const ModuleRepository = require('../repositorie/ModuleRepository');
 const PrivilegeRepository = require('../repositorie/PrivilegeRepository');
-const GetRoles            = require('../../application/use-cases/roles/GetRoles');
-const GetRoleById         = require('../../application/use-cases/roles/GetRoleById');
-const CreateRoles         = require('../../application/use-cases/roles/CreateRoles');
-const UpdateRoles         = require('../../application/use-cases/roles/UpdateRoles');
-const DeleteRoles         = require('../../application/use-cases/roles/DeleteRoles');
-const ToggleRoles         = require('../../application/use-cases/roles/ToggleRoles');
+const GetRoles = require('../../application/use-cases/roles/GetRoles');
+const GetRoleById = require('../../application/use-cases/roles/GetRoleById');
+const CreateRoles = require('../../application/use-cases/roles/CreateRoles');
+const UpdateRoles = require('../../application/use-cases/roles/UpdateRoles');
+const DeleteRoles = require('../../application/use-cases/roles/DeleteRoles');
+const ToggleRoles = require('../../application/use-cases/roles/ToggleRoles');
 const {
   ok, created, badRequest, notFound, conflict, unprocessable, serverError,
 } = require('../../shared/utils/response');
 
-const repo     = new RoleRepository();
-const modRepo  = new ModuleRepository();
+const repo = new RoleRepository();
+const modRepo = new ModuleRepository();
 const privRepo = new PrivilegeRepository();
 
 // ── GET /api/roles ────────────────────────────────────────────────────────────
@@ -43,18 +43,20 @@ const getRoles = async (req, res) => {
 // Respuesta: [{ nombre, privilegios: ['crear','leer',...] }, ...]
 const getCatalogos = async (req, res) => {
   try {
-    const modulos     = await modRepo.findAll({ estado: true });
+    const modulos = await modRepo.findAll({ estado: true });
     const privilegios = await privRepo.findAll({ estado: true });
 
-    // Agrupa privilegios por módulo — cada módulo solo tiene nombre
+    // Agrupa privilegios por módulo
     const catalogo = modulos.map((m) => ({
+      id: m.id,
       nombre: m.nombre,
       privilegios: privilegios
         .filter((p) => {
-          const pModuloNombre = p.modulo?.nombre || '';
-          return pModuloNombre === m.nombre;
+          // Comparar el ID del módulo del privilegio con el ID del módulo actual
+          const pModuloId = p.modulo?._id?.toString?.() || p.modulo?.id || '';
+          return pModuloId === m.id || pModuloId === m._id?.toString?.();
         })
-        .map((p) => p.nombre),
+        .map((p) => ({ id: p.id, nombre: p.nombre })),
     }));
 
     return ok(res, catalogo);

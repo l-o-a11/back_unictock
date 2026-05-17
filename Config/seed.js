@@ -13,14 +13,15 @@ const MODULES = [
   'usuarios',
   'roles',
   'insumos',
-  'categoria de insumos',
+  'categorias de insumos',
   'compras',
   'produccion',
   'proveedores',
   'terceros',
+  'empleados',
   'sedes',
   'productos',
-  'categoria de productos',
+  'categorias de productos',
   'dashboard'
 ];
 

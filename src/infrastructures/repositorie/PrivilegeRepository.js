@@ -13,28 +13,42 @@ class PrivilegeRepository {
     const query = {};
     if (filters.estado !== undefined && filters.estado !== '')
       query.estado = filters.estado === 'true' || filters.estado === true;
-    if (filters.moduloId) query.modulo = filters.moduloId;
-
-    // populate solo trae nombre (lo único que tiene el módulo)
-    const docs = await PrivilegeModel.find(query)
-      .populate('modulo', 'nombre')
-      .sort({ nombre: 1 });
+    if (filters.modulo !== undefined && filters.modulo !== '')
+      query.modulo = filters.modulo;
+    const docs = await PrivilegeModel.find(query).populate('modulo', 'nombre').sort({ nombre: 1 });
     return docs.map((d) => this._toPlain(d));
   }
 
   async findById(id) {
-    const doc = await PrivilegeModel.findById(id)
-      .populate('modulo', 'nombre')
-      .catch(() => null);
+    const doc = await PrivilegeModel.findById(id).populate('modulo', 'nombre').catch(() => null);
     return this._toPlain(doc);
   }
 
-  async findByNombreAndModulo(nombre, moduloId) {
-    const doc = await PrivilegeModel.findOne({
-      nombre: nombre.trim().toLowerCase(),
-      modulo: moduloId,
-    }).catch(() => null);
+  async findByNombre(nombre, moduloId = null) {
+    const query = { nombre: nombre.trim().toLowerCase() };
+    if (moduloId) query.modulo = moduloId;
+    const doc = await PrivilegeModel.findOne(query).populate('modulo', 'nombre').catch(() => null);
     return this._toPlain(doc);
+  }
+
+  async create(data) {
+    const doc = await PrivilegeModel.create({
+      nombre: data.nombre.trim().toLowerCase(),
+      modulo: data.modulo,
+      estado: data.estado !== undefined ? data.estado : true,
+    });
+    return this._toPlain(await doc.populate('modulo', 'nombre'));
+  }
+
+  async update(id, changes) {
+    if (changes.nombre) changes.nombre = changes.nombre.trim().toLowerCase();
+    const doc = await PrivilegeModel.findByIdAndUpdate(id, changes, { new: true, runValidators: true }).populate('modulo', 'nombre').catch(() => null);
+    return this._toPlain(doc);
+  }
+
+  async delete(id) {
+    const result = await PrivilegeModel.findByIdAndDelete(id).catch(() => null);
+    return !!result;
   }
 }
 
