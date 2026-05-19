@@ -65,6 +65,20 @@ const getCatalogos = async (req, res) => {
   }
 };
 
+const countUsersByRole = async (req, res) => {
+  try {
+    const users = await userRepo.findAll({
+      rolId: req.params.id,
+    });
+
+    return ok(res, {
+      total: users.length,
+    });
+  } catch (err) {
+    return serverError(res);
+  }
+};
+
 // ── GET /api/roles/:id ────────────────────────────────────────────────────────
 const getRoleById = async (req, res) => {
   try {
@@ -121,4 +135,4 @@ const toggleRole = async (req, res) => {
   }
 };
 
-module.exports = { getRoles, getCatalogos, getRoleById, createRole, updateRole, deleteRole, toggleRole };
+module.exports = { countUsersByRole, getRoles, getCatalogos, getRoleById, createRole, updateRole, deleteRole, toggleRole };

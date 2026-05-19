@@ -4,39 +4,18 @@ const mongoose = require("mongoose");
 
 const permisoSchema = new mongoose.Schema(
     {
-        modulo: {
-            nombre: { type: String, required: true, trim: true },
-        },
-        privilegios: [
-            {
-               
-                nombre: { type: String, required: true, trim: true }
-            },
-        ],
+    modulo: { type: String, required: true, trim: true },
+    privilegios: { type: [String], required: true, default: [] },
     },
     { _id: false }
 );
 
 const roleSchema = new mongoose.Schema(
     {
-        nombre: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true
-        },
-        descripcion: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        estado: {
-            type: Boolean,
-            default: true
-        },
-        permisos: {
-            type: [permisoSchema],
-            default: []
+        nombre: { type: String, required: true, unique: true, trim: true},
+        descripcion: {type: String,required: true,trim: true},
+        estado: { type: Boolean, default: true },
+        permisos: { type: [permisoSchema], default: []
         },
     },
     { timestamps: true }

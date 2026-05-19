@@ -20,6 +20,8 @@ const router = Router();
 // ⚠️ /catalogos DEBE ir antes de /:id para no ser capturado como param
 router.get('/catalogos',        ctrl.getCatalogos);
 
+router.get("/:id/users-count", ctrl.countUsersByRole);
+
 router.get('/',                 ctrl.getRoles);
 router.get('/:id',              ctrl.getRoleById);
 router.post('/',                ctrl.createRole);
