@@ -11,7 +11,7 @@
  *   PATCH  /api/roles/:id/toggle       — Activar / inactivar
  */
 
-const RoleRepository     = require('../repositorie/roleRepository');
+
 const ModuleRepository   = require('../repositorie/ModuleRepository');
 const PrivilegeRepository = require('../repositorie/PrivilegeRepository');
 // BUG 5 FIX: importar UserModel para countUsersByRole
@@ -26,7 +26,6 @@ const {
   ok, created, badRequest, notFound, conflict, unprocessable, serverError,
 } = require('../../shared/utils/response');
 
-const repo     = new RoleRepository();
 const modRepo  = new ModuleRepository();
 const privRepo = new PrivilegeRepository();
 
