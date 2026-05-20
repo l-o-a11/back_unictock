@@ -1,12 +1,13 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const productCategoryRoutes = require('./src/infrastructures/routes/productCategoryRoutes');
+const cors    = require('cors');
+const helmet  = require('helmet');
 
-const productionRoutes = require('./src/infrastructures/routes/productionRoutes');
-const suppliersRoutes = require('./src/infrastructures/routes/suppliersRoutes');
-const productsRoutes = require('./src/infrastructures/routes/productsRoutes');
+const productCategoryRoutes = require('./src/infrastructures/routes/productCategoryRoutes');
+const productionRoutes  = require('./src/infrastructures/routes/productionRoutes');
+const suppliersRoutes   = require('./src/infrastructures/routes/suppliersRoutes');
+const productsRoutes    = require('./src/infrastructures/routes/productsRoutes');
+const roleRoutes        = require('./src/infrastructures/routes/roleRoutes');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/products', require('./src/infrastructures/routes/productsRoutes'))
 app.use('/api/produccion', productionRoutes);
 app.use('/api/proveedores', suppliersRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/roles', roleRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
