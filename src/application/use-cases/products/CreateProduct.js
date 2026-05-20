@@ -6,17 +6,15 @@ class CreateProduct {
   }
 
   async execute(data) {
-    const {
-      nombre,
-      referencia,
-      precio,
-      stock,
-      id_categorias,
-      imagenes_Url,
-    } = data;
+    const nombre = data.nombre ?? data.name;
+    const referencia = data.referencia ?? data.reference;
+    const precio = data.precio ?? data.price;
+    const stock = data.stock;
+    const id_categoria = data.id_categoria ?? data.id_categorias ?? data.categoryId;
+    const imagenes_Url = data.imagenes_Url ?? data.imagenesUrl ?? [];
 
-    if (!nombre || !referencia || !precio || !stock || !id_categorias) {
-      const err = new Error("Campos obligatorios faltantes");
+    if (!nombre || !referencia || precio === undefined || stock === undefined || !id_categoria) {
+      const err = new Error('Campos obligatorios faltantes');
       err.statusCode = 400;
       throw err;
     }
@@ -26,14 +24,11 @@ class CreateProduct {
       referencia,
       precio,
       stock,
-      id_categorias,
+      id_categoria,
       imagenes_Url,
-      activo: true,
+      estado: true,
     });
   }
 }
 
-
 module.exports = CreateProduct;
-
-
