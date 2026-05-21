@@ -1,6 +1,9 @@
 // infrastructures/repositories/SiteRepository.js
+// FIX #8: findByName ahora usa regex case-insensitive (igual que la API)
+// Antes usaba match exacto → "Putonga" y "putonga" eran sedes distintas
+
 const SiteModel = require('../db/SiteModel');
-const Site = require('../../domain/entities/site');
+const Site      = require('../../domain/entities/site');
 
 class SiteRepository {
     _toEntity(doc) {
@@ -13,9 +16,9 @@ class SiteRepository {
      * Devuelve sitios con filtros y paginación.
      *
      * Filtros soportados (query params):
-     *   search  — busca en nombre, ciudad, barrio y direccion (regex case-insensitive)
+     *   search   — busca en nombre, ciudad, barrio y direccion (regex case-insensitive)
      *   telefono — coincidencia exacta
-     *   estado  — "true" | "false"
+     *   estado   — "true" | "false"
      *
      * Paginación:
      *   page    — número de página (default 1)
@@ -31,10 +34,10 @@ class SiteRepository {
             search,
             telefono,
             estado,
-            page = 1,
-            limit = 10,
-            sortBy = 'nombre',
-            order = 'asc',
+            page    = 1,
+            limit   = 10,
+            sortBy  = 'nombre',
+            order   = 'asc',
         } = filters;
 
         const query = {};
@@ -42,9 +45,9 @@ class SiteRepository {
         if (search) {
             const re = new RegExp(search, 'i');
             query.$or = [
-                { nombre: re },
-                { ciudad: re },
-                { barrio: re },
+                { nombre:    re },
+                { ciudad:    re },
+                { barrio:    re },
                 { direccion: re },
             ];
         }
@@ -54,10 +57,10 @@ class SiteRepository {
             query.estado = estado === 'true' || estado === true;
         }
 
-        const pageNum = Math.max(1, parseInt(page));
-        const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
-        const skip = (pageNum - 1) * limitNum;
-        const sortDir = order === 'desc' ? -1 : 1;
+        const pageNum  = Math.max(1, parseInt(page)  || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+        const skip     = (pageNum - 1) * limitNum;
+        const sortDir  = order === 'desc' ? -1 : 1;
 
         const [docs, total] = await Promise.all([
             SiteModel.find(query)
@@ -68,10 +71,10 @@ class SiteRepository {
         ]);
 
         return {
-            data: docs.map((d) => this._toEntity(d)),
+            data:       docs.map((d) => this._toEntity(d)),
             total,
-            page: pageNum,
-            limit: limitNum,
+            page:       pageNum,
+            limit:      limitNum,
             totalPages: Math.ceil(total / limitNum),
         };
     }
@@ -81,8 +84,12 @@ class SiteRepository {
         return this._toEntity(doc);
     }
 
+    // FIX #8: regex ^nombre$ con flag 'i' — case-insensitive, igual que la API
     async findByName(nombre) {
-        const doc = await SiteModel.findOne({ nombre }).catch(() => null);
+        const escaped = nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const doc = await SiteModel.findOne({
+            nombre: { $regex: new RegExp(`^${escaped}$`, 'i') },
+        }).catch(() => null);
         return this._toEntity(doc);
     }
 
@@ -98,9 +105,6 @@ class SiteRepository {
         return this._toEntity(doc);
     }
 
-    /**
-     * Activa o desactiva un sitio (soft toggle).
-     */
     async toggleEstado(id) {
         const current = await SiteModel.findById(id).catch(() => null);
         if (!current) return null;

@@ -1,5 +1,7 @@
 // application/use-cases/roles/UpdateRoles.js
 
+const { validatePermissions } = require('../../../shared/utils/rolePermissionValidator');
+
 class UpdateRoles {
   constructor(repo, moduleRepo, privilegeRepo) {
     this.repo          = repo;
@@ -10,7 +12,7 @@ class UpdateRoles {
   async execute(id, data) {
     const role = await this.repo.findById(id);
     if (!role) {
-      const err = new Error('Rol no encontrado');
+      const err = new Error("Rol no encontrado");
       err.statusCode = 404;
       throw err;
     }
@@ -20,11 +22,10 @@ class UpdateRoles {
     if (data.nombre !== undefined) {
       const trimmed = data.nombre.trim();
       if (!trimmed) {
-        const err = new Error('El nombre no puede estar vacío');
+        const err = new Error("El nombre no puede estar vacío");
         err.statusCode = 400;
         throw err;
       }
-      // Verificar duplicado solo si cambió
       if (trimmed !== role.nombre) {
         const existing = await this.repo.findByName(trimmed);
         if (existing && existing.id !== id) {
@@ -40,17 +41,14 @@ class UpdateRoles {
     if (data.estado      !== undefined) changes.estado      = data.estado;
 
     if (data.permisos !== undefined) {
-      changes.permisos = await this._validarPermisos(data.permisos);
+      changes.permisos = await validatePermissions(
+        data.permisos,
+        this.moduleRepo,
+        this.privilegeRepo
+      );
     }
 
     return this.repo.update(id, changes);
-  }
-
-  async _validarPermisos(permisos) {
-    // Reutilizar la misma lógica de CreateRoles
-    const CreateRoles = require('./CreateRoles');
-    const tmp = new CreateRoles(this.repo, this.moduleRepo, this.privilegeRepo);
-    return tmp._validarPermisos(permisos);
   }
 }
 
