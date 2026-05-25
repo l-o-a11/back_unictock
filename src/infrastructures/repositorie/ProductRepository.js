@@ -1,33 +1,37 @@
 // src/infrastructures/repositorie/ProductRepository.js
 const ProductModel = require('../db/ProductModel');
-const Product = require('../../domain/entities/Product');
+const Product = require('../../domain/entities/Product'); // singular — era "Products" (plural), causaba crash
 
 class ProductRepository {
   _toEntity(doc) {
     if (!doc) return null;
     const obj = doc.toObject ? doc.toObject() : doc;
-    return new Product({ 
-      ...obj, 
-      id: obj._id.toString() 
+    return new Product({
+      ...obj,
+      id: obj._id.toString(),
     });
   }
 
   async findAll({ page = 1, limit = 10, search = '', active, sortBy = 'createdAt', order = 'desc' } = {}) {
     const limitNum = Math.min(parseInt(limit) || 10, 100);
-    const pageNum = Math.max(parseInt(page) || 1, 1);
-    const skipNum = (pageNum - 1) * limitNum;
-    const sortDir = order === 'asc' ? 1 : -1;
+    const pageNum  = Math.max(parseInt(page)  || 1,  1);
+    const skipNum  = (pageNum - 1) * limitNum;
+    const sortDir  = order === 'asc' ? 1 : -1;
 
     const query = {};
+
+    // Los campos del schema son en español: nombre, referencia
     if (search) {
+      const re = new RegExp(search, 'i');
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } }
+        { nombre:    re },
+        { referencia: re },
       ];
     }
+
+    // El schema usa 'estado' (booleano), no 'active'
     if (active !== undefined) {
-      query.active = active === 'true';
+      query.estado = active === 'true';
     }
 
     const [docs, total] = await Promise.all([
@@ -35,17 +39,17 @@ class ProductRepository {
         .sort({ [sortBy]: sortDir })
         .limit(limitNum)
         .skip(skipNum),
-      ProductModel.countDocuments(query)
+      ProductModel.countDocuments(query),
     ]);
 
     return {
       data: docs.map(this._toEntity.bind(this)),
       pagination: {
-        page: pageNum,
+        page:  pageNum,
         limit: limitNum,
         total,
-        pages: Math.ceil(total / limitNum)
-      }
+        pages: Math.ceil(total / limitNum),
+      },
     };
   }
 
@@ -68,9 +72,8 @@ class ProductRepository {
 
   async delete(id) {
     const doc = await ProductModel.findByIdAndDelete(id).catch(() => null);
-    return this._toEntity(doc);
+    return !!doc;
   }
 }
 
 module.exports = ProductRepository;
-

@@ -4,17 +4,17 @@ const mongoose = require("mongoose");
 
 const productCategorySchema = new mongoose.Schema(
   {
-    id_categoria: { type: mongoose.Schema.Types.ObjectId, ref: "ProductCategory", required: true },
-    nombre: { type: String, required: true, unique: true },
-    descripción: { type: String, required: true },
-    cantidad_productos: { type: Number, default: 0 },
+    // Se eliminó el campo id_categoria auto-referencial (required: true)
+    // que causaba ValidationError en todo intento de crear categorías.
+    nombre:                { type: String, required: true, unique: true },
+    descripcion:           { type: String, default: "" },   // sin tilde en la ó
+    cantidad_productos:    { type: Number, default: 0 },
     productos_disponibles: { type: Number, default: 0 },
-    estado: { type: Boolean, default: true },
+    estado:                { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-// No exponer el password en ninguna respuesta JSON
 productCategorySchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
