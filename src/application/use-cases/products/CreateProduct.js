@@ -6,24 +6,15 @@ class CreateProduct {
   }
 
   async execute(data) {
-    const {
-      nombre,
-      referencia,
-      precio,
-      stock,
-      id_categorias,
-      imagenes_Url,
-    } = data;
+    const nombre = data.nombre ?? data.name;
+    const referencia = data.referencia ?? data.reference;
+    const precio = data.precio ?? data.price;
+    const stock = data.stock;
+    const id_categoria = data.id_categoria ?? data.id_categorias ?? data.categoryId;
+    const imagenes_Url = data.imagenes_Url ?? data.imagenesUrl ?? [];
 
-    // Usar == null cubre tanto null como undefined, y permite precio/stock = 0
-    if (!nombre || !referencia || precio == null || stock == null || !id_categorias) {
-      const missing = [];
-      if (!nombre)       missing.push('nombre');
-      if (!referencia)   missing.push('referencia');
-      if (precio == null) missing.push('precio');
-      if (stock == null)  missing.push('stock');
-      if (!id_categorias) missing.push('id_categorias');
-      const err = new Error(`Campos obligatorios faltantes: ${missing.join(', ')}`);
+    if (!nombre || !referencia || precio === undefined || stock === undefined || !id_categoria) {
+      const err = new Error('Campos obligatorios faltantes');
       err.statusCode = 400;
       throw err;
     }
@@ -31,16 +22,13 @@ class CreateProduct {
     return this.repo.create({
       nombre,
       referencia,
-      precio:      Number(precio),
-      stock:       Number(stock),
-      id_categorias: String(id_categorias),
-      imagenes_Url:  Array.isArray(imagenes_Url) ? imagenes_Url : [],
-      activo: true,
+      precio,
+      stock,
+      id_categoria,
+      imagenes_Url,
+      estado: true,
     });
   }
 }
 
-
 module.exports = CreateProduct;
-
-
