@@ -9,52 +9,30 @@ class ProductRepository {
     return new Product({
       ...obj,
       id: obj._id.toString(),
-<<<<<<< HEAD
+      // Mantener el campo tal como está en el schema: `id_categorias`.
+      id_categorias: obj.id_categorias?.toString?.() ?? obj.id_categorias,
     });
   }
 
-  async findAll({ page = 1, limit = 10, search = '', active, sortBy = 'createdAt', order = 'desc' } = {}) {
+  async findAll({ page = 1, limit = 10, search = '', estado, active, sortBy = 'createdAt', order = 'desc' } = {}) {
     const limitNum = Math.min(parseInt(limit) || 10, 100);
-    const pageNum  = Math.max(parseInt(page)  || 1,  1);
-    const skipNum  = (pageNum - 1) * limitNum;
-    const sortDir  = order === 'asc' ? 1 : -1;
-=======
-      id_categoria: obj.id_categoria?.toString?.() ?? obj.id_categoria,
-    });
-  }
-
-  async findAll({ page = 1, limit = 100, search = '', estado, active, sortBy = 'createdAt', order = 'desc' } = {}) {
-    const limitNum = Math.min(parseInt(limit) || 100, 100);
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const skipNum = (pageNum - 1) * limitNum;
     const sortDir = order === 'asc' ? 1 : -1;
->>>>>>> f9dd6645de68e61ee98fab5c7974815b9cc64ea2
 
     const query = {};
 
-    // Los campos del schema son en español: nombre, referencia
     if (search) {
-      const re = new RegExp(search, 'i');
       query.$or = [
-<<<<<<< HEAD
-        { nombre:    re },
-        { referencia: re },
-      ];
-    }
-
-    // El schema usa 'estado' (booleano), no 'active'
-    if (active !== undefined) {
-      query.estado = active === 'true';
-=======
         { nombre: { $regex: search, $options: 'i' } },
         { referencia: { $regex: search, $options: 'i' } },
       ];
     }
 
+    // Soportar ambos filtros: `estado` o `active` (legacy)
     const stateFilter = estado ?? active;
     if (stateFilter !== undefined) {
       query.estado = stateFilter === true || stateFilter === 'true';
->>>>>>> f9dd6645de68e61ee98fab5c7974815b9cc64ea2
     }
 
     const [docs, total] = await Promise.all([
@@ -68,7 +46,7 @@ class ProductRepository {
     return {
       data: docs.map(this._toEntity.bind(this)),
       pagination: {
-        page:  pageNum,
+        page: pageNum,
         limit: limitNum,
         total,
         pages: Math.ceil(total / limitNum),
@@ -78,6 +56,11 @@ class ProductRepository {
 
   async findById(id) {
     const doc = await ProductModel.findById(id).catch(() => null);
+    return this._toEntity(doc);
+  }
+
+  async findByReference(referencia) {
+    const doc = await ProductModel.findOne({ referencia }).catch(() => null);
     return this._toEntity(doc);
   }
 
@@ -107,8 +90,5 @@ class ProductRepository {
   }
 }
 
-<<<<<<< HEAD
+
 module.exports = ProductRepository;
-=======
-module.exports = ProductRepository;
->>>>>>> f9dd6645de68e61ee98fab5c7974815b9cc64ea2
