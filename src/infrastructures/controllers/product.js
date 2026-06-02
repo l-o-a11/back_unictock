@@ -5,7 +5,7 @@
  * Incluye CRUD + toggle + fichas técnicas.
  */
 
-const ProductRepository = require("../repositories/ProductRepository");
+const ProductRepository = require("../repositorie/ProductRepository");
 
 // Use Cases
 const GetProducts    = require("../../application/use-cases/products/GetProducts");
@@ -16,8 +16,8 @@ const DeleteProduct  = require("../../application/use-cases/products/DeleteProdu
 const ToggleProduct  = require("../../application/use-cases/products/ToggleProduct");
 
 // Repos fichas técnicas
-const TechnicalSpecificationsRepository = require("../repositories/TechnicalSpecificationsRepository");
-const MaterialTechnicalSpecificationsRepository = require("../repositories/MaterialTechnicalSpecificationsRepository");
+const TechnicalSpecificationsRepository = require("../repositorie/TechnicalSpecificationsRepository");
+const MaterialTechnicalSpecificationsRepository = require("../repositorie/MaterialTechnicalSpecificationsRepository");
 
 const {
   ok,
