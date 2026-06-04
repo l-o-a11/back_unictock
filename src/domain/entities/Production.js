@@ -6,6 +6,8 @@ const ESTADOS_VALIDOS = [
   'Corte',
   'Compras',
   'Producción',
+  'Empaque',
+  'Enviado',
   'Anulada',
 ];
 
@@ -22,6 +24,17 @@ class Production {
     historial       = [],
     createdAt,
     updatedAt,
+    asignaciones = [],
+    tipo = null,
+    referencia = null,
+    producto = null,
+    techSpecification = null,
+    finishedImages = [],
+    finishedImageUrl = null,
+    designImages = [],
+    fromDamaged = false,
+    originalOrderNumber = null,
+    originalOrderStatus = null,
   }) {
     this.id               = id;
     this.numero_orden     = numero_orden;
@@ -34,6 +47,17 @@ class Production {
     this.historial        = historial;
     this.createdAt        = createdAt;
     this.updatedAt        = updatedAt;
+    this.asignaciones     = asignaciones;
+    this.tipo             = tipo;
+    this.referencia       = referencia;
+    this.producto         = producto;
+    this.techSpecification = techSpecification;
+    this.finishedImages   = finishedImages;
+    this.finishedImageUrl = finishedImageUrl;
+    this.designImages     = designImages;
+    this.fromDamaged      = fromDamaged;
+    this.originalOrderNumber = originalOrderNumber;
+    this.originalOrderStatus = originalOrderStatus;
   }
 
   estaAnulada() {
@@ -64,6 +88,17 @@ class Production {
       historial:        this.historial,
       createdAt:        this.createdAt,
       updatedAt:        this.updatedAt,
+      asignaciones:     this.asignaciones,
+      tipo:             this.tipo,
+      referencia:       this.referencia,
+      producto:         this.producto,
+      techSpecification: this.techSpecification,
+      finishedImages:   this.finishedImages,
+      finishedImageUrl: this.finishedImageUrl,
+      designImages:     this.designImages,
+      fromDamaged:      this.fromDamaged,
+      originalOrderNumber: this.originalOrderNumber,
+      originalOrderStatus: this.originalOrderStatus,
     };
   }
 }

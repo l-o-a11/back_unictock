@@ -6,7 +6,7 @@ class CambiarEstadoProduction {
     this.productionRepository = productionRepository;
   }
 
-  async execute(id, nuevoEstado, id_usuario) {
+  async execute(id, nuevoEstado, id_usuario, user, options = {}) {
     if (!Production.ESTADOS_VALIDOS.includes(nuevoEstado)) {
       const err = new Error(
         `Estado inválido. Los estados permitidos son: ${Production.ESTADOS_VALIDOS.join(', ')}`,
@@ -31,8 +31,18 @@ class CambiarEstadoProduction {
       err.statusCode = 422;
       throw err;
     }
+    const force = options.force === true;
+    if (!force) {
+      const currentIdx = Production.ESTADOS_VALIDOS.indexOf(production.estado);
+      const nextIdx = Production.ESTADOS_VALIDOS.indexOf(nuevoEstado);
+      if (!(nextIdx > currentIdx)) {
+        const err = new Error('No se puede retroceder el estado sin autorización');
+        err.statusCode = 422;
+        throw err;
+      }
+    }
 
-    const updated = await this.productionRepository.cambiarEstado(id, nuevoEstado, id_usuario);
+    const updated = await this.productionRepository.cambiarEstado(id, nuevoEstado, id_usuario, user, options.extra || {});
     return updated.toJSON();
   }
 }
