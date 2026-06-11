@@ -9,11 +9,11 @@ class ProductRepository {
     return new Product({
       ...obj,
       id: obj._id.toString(),
-      id_categoria: obj.id_categoria?.toString?.() ?? obj.id_categoria,
+      id_categorias: obj.id_categorias?.toString?.() ?? obj.id_categorias,
     });
   }
 
-  async findAll({ page = 1, limit = 10, search = '', estado, active, sortBy = 'createdAt', order = 'desc' } = {}) {
+  async findAll({ page = 1, limit = 10, search = '', estado, active, sortBy = 'createdAt', order = 'asc' } = {}) {
     const limitNum = Math.min(parseInt(limit) || 10, 100);
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const skipNum = (pageNum - 1) * limitNum;
@@ -27,6 +27,7 @@ class ProductRepository {
       ];
     }
 
+    // Soportar ambos filtros: `estado` o `active` (legacy)
     const stateFilter = estado ?? active;
     if (stateFilter !== undefined) {
       query.estado = stateFilter === true || stateFilter === 'true';
@@ -53,6 +54,11 @@ class ProductRepository {
 
   async findById(id) {
     const doc = await ProductModel.findById(id).catch(() => null);
+    return this._toEntity(doc);
+  }
+
+  async findByReference(referencia) {
+    const doc = await ProductModel.findOne({ referencia }).catch(() => null);
     return this._toEntity(doc);
   }
 

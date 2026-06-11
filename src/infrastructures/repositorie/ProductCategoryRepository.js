@@ -22,7 +22,7 @@ class ProductCategoryRepository {
       search,
       page = 1,
       limit = 10,
-      sortBy = "nombre",
+      sortBy = "createdAt",
       order = "asc",
     } = filters;
 
