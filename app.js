@@ -8,6 +8,9 @@ const productCategoryRoutes = require('./src/infrastructures/routes/productCateg
 const productionRoutes  = require('./src/infrastructures/routes/productionRoutes');
 const productsRoutes    = require('./src/infrastructures/routes/productsRoutes');
 const roleRoutes        = require('./src/infrastructures/routes/roleRoutes');
+const siteRoutes        = require('./src/infrastructures/routes/siteRoutes');
+const supplyRoutes      = require('./src/infrastructures/routes/supplyRoutes');
+const supplyCategoryRoutes = require('./src/infrastructures/routes/supplyCategoryRoutes');
 
 const app = express();
 
@@ -49,6 +52,9 @@ app.use('/api/proveedores', suppliersRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/terceros', thirdPartyRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/sites', siteRoutes);
+app.use('/api/insumos', supplyRoutes);
+app.use('/api/categorias-insumos', supplyCategoryRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

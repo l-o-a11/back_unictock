@@ -1,6 +1,6 @@
 // src/infrastructures/repositorie/ProductRepository.js
 const ProductModel = require('../db/ProductModel');
-const Product = require('../../domain/entities/Product'); // singular — era "Products" (plural), causaba crash
+const Product = require('../../domain/entities/Product');
 
 class ProductRepository {
   _toEntity(doc) {
@@ -9,19 +9,17 @@ class ProductRepository {
     return new Product({
       ...obj,
       id: obj._id.toString(),
-      // Mantener el campo tal como está en el schema: `id_categorias`.
       id_categorias: obj.id_categorias?.toString?.() ?? obj.id_categorias,
     });
   }
 
-  async findAll({ page = 1, limit = 10, search = '', estado, active, sortBy = 'createdAt', order = 'desc' } = {}) {
+  async findAll({ page = 1, limit = 10, search = '', estado, active, sortBy = 'createdAt', order = 'asc' } = {}) {
     const limitNum = Math.min(parseInt(limit) || 10, 100);
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const skipNum = (pageNum - 1) * limitNum;
     const sortDir = order === 'asc' ? 1 : -1;
 
     const query = {};
-
     if (search) {
       query.$or = [
         { nombre: { $regex: search, $options: 'i' } },
@@ -89,6 +87,5 @@ class ProductRepository {
     return this._toEntity(product);
   }
 }
-
 
 module.exports = ProductRepository;

@@ -1,39 +1,37 @@
 // src/infrastructures/repositorie/TechnicalSheetRepository.js
-const mongoose             = require('mongoose');
-const TechnicalSheetModel  = require('../db/TechnicalSheetModel');
+const mongoose            = require('mongoose');
+const TechnicalSheetModel = require('../db/TechnicalSheetModel');
 
 class TechnicalSheetRepository {
   _toPlain(doc) {
     if (!doc) return null;
     const obj = doc.toObject ? doc.toObject() : doc;
     return {
-      id:           obj._id.toString(),
-      id_producto:  obj.id_producto?.toString(),
-      version:      obj.version ?? obj.versiones ?? 1,
-      responsable:  obj.responsable ?? obj.client ?? obj.createdBy ?? null,
-      fecha_inicio: obj.fecha_inicio ?? obj.date ?? null,
-      fecha_fin:    obj.fecha_fin ?? null,
-      descripciones: obj.descripciones ?? obj.descripcion ?? null,
-      client:       obj.client ?? obj.responsable ?? obj.createdBy ?? "",
-      ref:          obj.ref ?? obj.reference ?? "",
-      type:         obj.type ?? obj.tipo ?? "",
-      description:  obj.description ?? obj.descripcion ?? obj.descripciones ?? "",
-      observations: obj.observations ?? obj.observaciones ?? "",
-      createdBy:    obj.createdBy ?? obj.responsable ?? "",
-      image:        obj.image ?? obj.imagen ?? null,
-      fabrics:      obj.fabrics ?? [],
-      cups:         obj.cups ?? [],
-      closures:     obj.closures ?? [],
-      accessories:  obj.accessories ?? [],
-      measurements: obj.measurements ?? [],
-      activo:       obj.activo,
-      createdAt:    obj.createdAt,
-      updatedAt:    obj.updatedAt,
+      id:            obj._id.toString(),
+      id_producto:   obj.id_producto?.toString(),
+      version:       obj.version       ?? 1,
+      responsable:   obj.responsable   ?? obj.createdBy ?? obj.client ?? null,
+      fecha_inicio:  obj.fecha_inicio  ?? null,
+      fecha_fin:     obj.fecha_fin     ?? null,
+      client:        obj.client        ?? obj.responsable ?? obj.createdBy ?? "",
+      ref:           obj.ref           ?? "",
+      type:          obj.type          ?? "",
+      description:   obj.description   ?? obj.descripciones ?? "",
+      descripciones: obj.descripciones ?? obj.description   ?? "",
+      observations:  obj.observations  ?? "",
+      createdBy:     obj.createdBy     ?? obj.responsable   ?? "",
+      image:         obj.image         ?? null,
+      fabrics:       obj.fabrics       ?? [],
+      cups:          obj.cups          ?? [],
+      closures:      obj.closures      ?? [],
+      accessories:   obj.accessories   ?? [],
+      measurements:  obj.measurements  ?? [],
+      activo:        obj.activo,
+      createdAt:     obj.createdAt,
+      updatedAt:     obj.updatedAt,
     };
   }
 
-  /** Devuelve todas las fichas técnicas de un producto.
-   *  Retorna [] si el id_producto no es un ObjectId válido. */
   async findByProductId(id_producto) {
     if (!mongoose.isValidObjectId(id_producto)) return [];
     const docs = await TechnicalSheetModel
@@ -49,7 +47,35 @@ class TechnicalSheetRepository {
   }
 
   async create(data) {
-    const doc = await TechnicalSheetModel.create(data);
+    const responsable =
+      data.responsable ??
+      data.createdBy   ??
+      data.client      ??
+      'Sin responsable';
+
+    const payload = {
+      id_producto:   data.id_producto  ?? data.productId,
+      version:       data.version      ?? data.versiones ?? 1,
+      responsable,
+      createdBy:     data.createdBy    ?? responsable,
+      fecha_inicio:  data.fecha_inicio ?? data.date      ?? new Date(),
+      fecha_fin:     data.fecha_fin    ?? null,
+      client:        data.client       ?? responsable,
+      ref:           data.ref          ?? data.reference ?? '',
+      type:          data.type         ?? '',
+      description:   data.description  ?? data.descripciones ?? data.descripcion ?? '',
+      descripciones: data.descripciones ?? data.description  ?? data.descripcion ?? '',
+      observations:  data.observations ?? data.observaciones ?? '',
+      image:         data.image        ?? null,
+      fabrics:       data.fabrics      ?? [],
+      cups:          data.cups         ?? [],
+      closures:      data.closures     ?? [],
+      accessories:   data.accessories  ?? [],
+      measurements:  data.measurements ?? [],
+      activo:        data.activo       ?? true,
+    };
+
+    const doc = await TechnicalSheetModel.create(payload);
     return this._toPlain(doc);
   }
 
