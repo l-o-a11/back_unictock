@@ -19,15 +19,25 @@ class CreateProduct {
       throw err;
     }
 
-    const product = await this.repo.create({
-      nombre,
-      referencia,
-      precio,
-      stock,
-      id_categoria,
-      imagenes_Url,
-      estado: true,
-    });
+    let product;
+    try {
+      product = await this.repo.create({
+        nombre,
+        referencia,
+        precio,
+        stock,
+        id_categorias: id_categoria,
+        imagenes_Url,
+        estado: true,
+      });
+    } catch (dbErr) {
+      if (dbErr.code === 11000 || dbErr.errorResponse?.code === 11000) {
+        const err = new Error('Ya existe un producto con esa referencia o nombre');
+        err.statusCode = 409;
+        throw err;
+      }
+      throw dbErr;
+    }
 
     // ✅ Sumar el stock del nuevo producto a cantidad_productos de la categoría
     if (this.categoryRepo && id_categoria) {

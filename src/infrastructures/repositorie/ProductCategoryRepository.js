@@ -76,9 +76,8 @@ class ProductCategoryRepository {
 
   async update(id, changes) {
     const doc = await ProductCategoryModel
-      .findByIdAndUpdate(id, changes, {
+      .findByIdAndUpdate(id, { $set: changes }, {
         new: true,
-        runValidators: true,
       })
       .catch(() => null);
 

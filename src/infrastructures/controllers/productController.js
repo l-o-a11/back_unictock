@@ -63,9 +63,10 @@ const createProduct = async (req, res) => {
   try {
     return created(res, await new CreateProduct(repo, categoryRepo).execute(req.body));
   } catch (err) {
+    console.error('[createProduct] ERROR:', err);
     if (err.statusCode === 400) return badRequest(res, err.message);
-    if (err.statusCode === 409) return unprocessable(res, err.message);
-    return serverError(res);
+    if (err.statusCode === 409) return conflict(res, err.message);
+    return serverError(res, err.message);
   }
 };
 
@@ -81,11 +82,10 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
-    await new DeleteProduct(repo, techRepo).execute(req.params.id);
+    await new DeleteProduct(repo).execute(req.params.id);
     return ok(res, { message: "Producto eliminado exitosamente" });
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
-    if (err.statusCode === 422) return unprocessable(res, err.message);
     return serverError(res);
   }
 };

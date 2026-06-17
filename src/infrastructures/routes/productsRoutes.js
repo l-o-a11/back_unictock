@@ -52,4 +52,3 @@ router.put('/:id/tecnicas/:techSpecId/materiales/:materialTechSpecId',          
 router.delete('/:id/tecnicas/:techSpecId/materiales/:materialTechSpecId',       ctrl.deleteMaterialTechnicalSpecification);
 
 module.exports = router;
-
