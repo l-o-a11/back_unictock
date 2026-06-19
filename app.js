@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const uploadRoutes = require('./src/infrastructures/routes/uploadRoutes');
 const suppliersRoutes   = require('./src/infrastructures/routes/suppliersRoutes');
 const thirdPartyRoutes  = require('./src/infrastructures/routes/thirdPartyRoutes');
 const productCategoryRoutes = require('./src/infrastructures/routes/productCategoryRoutes');
@@ -46,6 +47,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
 // API Routes - /api prefix for consistency
+app.use('/api/upload', uploadRoutes);
 app.use(['/api/product-categories', '/product-categories'], productCategoryRoutes);
 app.use('/api/produccion', productionRoutes);
 app.use('/api/proveedores', suppliersRoutes);
@@ -56,6 +58,9 @@ app.use('/api/sites', siteRoutes);
 app.use('/api/insumos', supplyRoutes);
 app.use('/api/categorias-insumos', supplyCategoryRoutes);
 
+app.use(express.json({ limit: '50mb' })); // Cambiar de 10mb a 50mb
+app.use(express.urlencoded({ limit: '50mb', extended: true })); // Cambiar de 10mb a 50mb
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -65,4 +70,3 @@ app.use('*', (req, res) => {
 });
 
 module.exports = app;
-

@@ -1,4 +1,4 @@
-// src/infrastructures/controllers/productController.js — UNIFICADO
+// src/infrastructures/controllers/productController.js — UNIFICADO CON CLOUDINARY
 
 const mongoose = require("mongoose");
 const ProductRepository            = require("../repositorie/ProductRepository");
@@ -59,20 +59,54 @@ const getProductById = async (req, res) => {
   }
 };
 
+// ✅ ACTUALIZADO: Crear producto CON CLOUDINARY
 const createProduct = async (req, res) => {
   try {
-    return created(res, await new CreateProduct(repo, categoryRepo).execute(req.body));
+    // ✅ Desestructurar allImages del body
+    const { allImages = [], imagenes_Url = [], ...productData } = req.body;
+
+    // Validar que allImages sea un array si está presente
+    if (allImages && !Array.isArray(allImages)) {
+      return badRequest(res, "allImages debe ser un array");
+    }
+
+    // Pasar allImages junto con los demás datos
+    const dataWithImages = {
+      ...productData,
+      allImages,        // ← Array de { src, public_id, label, filename, size }
+      imagenes_Url      // ← Array de URLs simples (compatibilidad)
+    };
+
+    const createdProd = await new CreateProduct(repo, categoryRepo).execute(dataWithImages);
+    return created(res, createdProd);
   } catch (err) {
     console.error('[createProduct] ERROR:', err);
     if (err.statusCode === 400) return badRequest(res, err.message);
-    if (err.statusCode === 409) return conflict(res, err.message);
+    if (err.statusCode === 409) return badRequest(res, err.message); // Conflict
     return serverError(res, err.message);
   }
 };
 
+// ✅ ACTUALIZADO: Actualizar producto CON CLOUDINARY
 const updateProduct = async (req, res) => {
   try {
-    return ok(res, await new UpdateProduct(repo, categoryRepo).execute(req.params.id, req.body));
+    // ✅ Desestructurar allImages del body
+    const { allImages, imagenes_Url, ...updateData } = req.body;
+
+    // Validar que allImages sea un array si está presente
+    if (allImages && !Array.isArray(allImages)) {
+      return badRequest(res, "allImages debe ser un array");
+    }
+
+    // Pasar allImages junto con los demás datos
+    const dataWithImages = {
+      ...updateData,
+      ...(allImages !== undefined && { allImages }),        // ← Solo si viene en el request
+      ...(imagenes_Url !== undefined && { imagenes_Url })   // ← Solo si viene en el request
+    };
+
+    const updatedProd = await new UpdateProduct(repo, categoryRepo).execute(req.params.id, dataWithImages);
+    return ok(res, updatedProd);
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
     if (err.statusCode === 422) return unprocessable(res, err.message);
@@ -121,11 +155,26 @@ const getTechnicalSheetById = async (req, res) => {
   }
 };
 
+// ✅ ACTUALIZADO: Crear ficha técnica CON CLOUDINARY
 const createTechnicalSheet = async (req, res) => {
   try {
     const productId = await resolveProductId(req.params.id);
     if (!productId) return notFound(res, "Producto no encontrado");
-    const sheet = await new CreateTechnicalSheet(techRepo).execute(productId, req.body);
+
+    // ✅ Desestructurar allImages si viene en la ficha técnica
+    const { allImages = [], ...sheetData } = req.body;
+
+    // Validar que allImages sea un array si está presente
+    if (allImages && !Array.isArray(allImages)) {
+      return badRequest(res, "allImages debe ser un array");
+    }
+
+    const dataWithImages = {
+      ...sheetData,
+      allImages  // ← Array de { src, public_id, label, filename, size }
+    };
+
+    const sheet = await new CreateTechnicalSheet(techRepo).execute(productId, dataWithImages);
     return created(res, sheet);
   } catch (err) {
     if (err.statusCode === 400) return badRequest(res, err.message);
@@ -133,10 +182,25 @@ const createTechnicalSheet = async (req, res) => {
   }
 };
 
+// ✅ ACTUALIZADO: Actualizar ficha técnica CON CLOUDINARY
 const updateTechnicalSheet = async (req, res) => {
   try {
     const id = req.params.sheetId ?? req.params.techSpecId;
-    const sheet = await techRepo.update(id, req.body);
+
+    // ✅ Desestructurar allImages si viene
+    const { allImages, ...updateData } = req.body;
+
+    // Validar que allImages sea un array si está presente
+    if (allImages && !Array.isArray(allImages)) {
+      return badRequest(res, "allImages debe ser un array");
+    }
+
+    const dataWithImages = {
+      ...updateData,
+      ...(allImages !== undefined && { allImages })  // ← Solo si viene
+    };
+
+    const sheet = await techRepo.update(id, dataWithImages);
     if (!sheet) return notFound(res, "Ficha técnica no encontrada");
     return ok(res, sheet);
   } catch (err) {
@@ -208,14 +272,14 @@ const deleteMaterialTechnicalSpecification = async (req, res) => {
 module.exports = {
   getProducts,
   getProductById,
-  createProduct,
-  updateProduct,
+  createProduct,           // ✅ Adaptado para Cloudinary
+  updateProduct,           // ✅ Adaptado para Cloudinary
   deleteProduct,
   toggleProductStatus,
   getTechnicalSheets,
   getTechnicalSheetById,
-  createTechnicalSheet,
-  updateTechnicalSheet,
+  createTechnicalSheet,    // ✅ Adaptado para Cloudinary
+  updateTechnicalSheet,    // ✅ Adaptado para Cloudinary
   deleteTechnicalSheet,
   getMaterialTechnicalSpecifications,
   getMaterialTechnicalSpecificationById,
