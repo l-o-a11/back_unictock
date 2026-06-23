@@ -48,14 +48,25 @@ router.post('/upload', upload.single('file'), (req, res) => {
       });
     }
 
+    // 🔍 DEBUG: Ver estructura del archivo
+    console.log('🔍 [SINGLE] req.file:', JSON.stringify(req.file, null, 2));
+
+    // ✅ Mapear correctamente los campos de Cloudinary
+    const src = req.file.secure_url || req.file.path;
+    const public_id = req.file.public_id || req.file.filename;
+
+    console.log('✅ [SINGLE] Mapeado:', { src, public_id });
+
     res.json({
       success: true,
-      url: req.file.secure_url,
-      public_id: req.file.public_id,
+      url: src,
+      src: src,
+      public_id: public_id,
       filename: req.file.originalname,
       size: req.file.size
     });
   } catch (error) {
+    console.error('❌ [SINGLE] Error:', error);
     res.status(500).json({ 
       success: false,
       error: error.message 
@@ -74,19 +85,33 @@ router.post('/upload-multiple', upload.array('files', 10), (req, res) => {
       });
     }
 
-    const images = req.files.map(file => ({
-      src: file.secure_url,        // URL pública de Cloudinary
-      public_id: file.public_id,   // ID único en Cloudinary
-      label: file.originalname,
-      filename: file.originalname,
-      size: file.size
-    }));
+    // 🔍 DEBUG: Ver estructura del primer archivo
+    console.log('🔍 [MULTIPLE] req.files[0]:', JSON.stringify(req.files[0], null, 2));
+
+    // ✅ Mapear correctamente los campos de Cloudinary
+    const images = req.files.map((file, index) => {
+      const src = file.secure_url || file.path;
+      const public_id = file.public_id || file.filename;
+      
+      console.log(`✅ [MULTIPLE] Imagen ${index} mapeada:`, { src, public_id });
+
+      return {
+        src: src,
+        public_id: public_id,
+        label: file.originalname,
+        filename: file.originalname,
+        size: file.size
+      };
+    });
+
+    console.log('✅ [MULTIPLE] Response final:', JSON.stringify({ success: true, images }, null, 2));
 
     res.json({
       success: true,
       images: images
     });
   } catch (error) {
+    console.error('❌ [MULTIPLE] Error:', error);
     res.status(500).json({ 
       success: false,
       error: error.message 
@@ -103,8 +128,12 @@ router.delete('/upload/:publicId', async (req, res) => {
     // Decodificar el public_id (puede venir URL-encoded)
     const decodedPublicId = decodeURIComponent(publicId);
 
+    console.log('🗑️ Eliminando de Cloudinary:', decodedPublicId);
+
     // Eliminar de Cloudinary
     const result = await cloudinary.uploader.destroy(decodedPublicId);
+
+    console.log('✅ Resultado eliminación:', result);
 
     if (result.result === 'ok') {
       res.json({ 
@@ -118,6 +147,7 @@ router.delete('/upload/:publicId', async (req, res) => {
       });
     }
   } catch (error) {
+    console.error('❌ Error eliminando:', error);
     res.status(500).json({ 
       success: false,
       error: error.message 

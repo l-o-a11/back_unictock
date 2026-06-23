@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const uploadRoutes = require('./src/infrastructures/routes/uploadRoutes');
+const uploadRoutes = require('./src/infrastructures/routes/uploadRoutesCloudinary');
 const suppliersRoutes   = require('./src/infrastructures/routes/suppliersRoutes');
 const thirdPartyRoutes  = require('./src/infrastructures/routes/thirdPartyRoutes');
 const productCategoryRoutes = require('./src/infrastructures/routes/productCategoryRoutes');
@@ -40,14 +40,18 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// ✅ LÍMITES DE TAMAÑO (ANTES de registrar rutas)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Health check
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
-// API Routes - /api prefix for consistency
+// ✅ API Routes - /api prefix for consistency
+// Upload routes PRIMERO (antes que las demás)
 app.use('/api/upload', uploadRoutes);
+
+// Resto de rutas
 app.use(['/api/product-categories', '/product-categories'], productCategoryRoutes);
 app.use('/api/produccion', productionRoutes);
 app.use('/api/proveedores', suppliersRoutes);
@@ -57,9 +61,6 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/sites', siteRoutes);
 app.use('/api/insumos', supplyRoutes);
 app.use('/api/categorias-insumos', supplyCategoryRoutes);
-
-app.use(express.json({ limit: '50mb' })); // Cambiar de 10mb a 50mb
-app.use(express.urlencoded({ limit: '50mb', extended: true })); // Cambiar de 10mb a 50mb
 
 // 404 handler
 app.use('*', (req, res) => {
