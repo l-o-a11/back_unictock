@@ -37,6 +37,5 @@ const thirdPartySchema = new mongoose.Schema(
 // Índices para búsqueda eficiente
 thirdPartySchema.index({ nombre_empresa: 1 });
 thirdPartySchema.index({ estado: 1 });
-thirdPartySchema.index({ nit: 1 }, { sparse: true });
 
 module.exports = mongoose.model('ThirdParty', thirdPartySchema);
