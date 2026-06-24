@@ -88,7 +88,6 @@ const productSchema = new mongoose.Schema(
 );
 
 // ÍNDICES PARA BÚSQUEDA RÁPIDA
-productSchema.index({ referencia: 1 });
 productSchema.index({ nombre: 1 });
 productSchema.index({ id_categorias: 1 });
 productSchema.index({ activo: 1 });

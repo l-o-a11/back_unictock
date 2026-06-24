@@ -47,6 +47,15 @@ class ThirdPartyAssignmentRepository {
     assignments.splice(idx, 1);
     return true;
   }
+
+  async deleteByOrder(id_orden) {
+    for (let i = assignments.length - 1; i >= 0; i--) {
+      if (String(assignments[i].id_orden) === String(id_orden)) {
+        assignments.splice(i, 1);
+      }
+    }
+    return true;
+  }
 }
 
 module.exports = ThirdPartyAssignmentRepository;

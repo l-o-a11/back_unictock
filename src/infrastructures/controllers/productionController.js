@@ -173,6 +173,15 @@ const cambiarEstado = async (req, res) => {
     console.log(`[ProductionController] cambiarEstado called id=${req.params.id} estado=${estado} id_usuario=${id_usuario} force=${!!force}`);
     console.log('[ProductionController] payload extra:', rest);
 
+    // Si retrocedemos a un estado igual o anterior a "Compras", eliminamos las asignaciones de terceros de la orden
+    const Production = require("../../domain/entities/Production");
+    const targetIdx = Production.ESTADOS_VALIDOS.indexOf(estado);
+    const comprasIdx = Production.ESTADOS_VALIDOS.indexOf("Compras");
+    if (targetIdx !== -1 && targetIdx <= comprasIdx) {
+      console.log(`[ProductionController] Retrocediendo al estado "${estado}". Eliminando asignaciones para orden ${req.params.id}`);
+      await assignmentRepo.deleteByOrder(req.params.id);
+    }
+
     const useCase = new CambiarEstadoProduction(prodRepo);
     const result  = await useCase.execute(req.params.id, estado, id_usuario, user, { force: !!force, extra: rest });
       console.log('[ProductionController] cambiarEstado result:', result && result.id ? result.id : result);
