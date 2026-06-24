@@ -5,7 +5,7 @@ class AnularProduction {
     this.productionRepository = productionRepository;
   }
 
-  async execute(id, motivo, id_usuario) {
+  async execute(id, motivo, id_usuario, user) {
     const production = await this.productionRepository.findById(id);
     if (!production) {
       const err = new Error('Orden de producción no encontrada');
@@ -23,7 +23,7 @@ class AnularProduction {
       throw err;
     }
 
-    const updated = await this.productionRepository.anular(id, motivo.trim(), id_usuario);
+    const updated = await this.productionRepository.anular(id, motivo.trim(), id_usuario, user);
     return updated.toJSON();
   }
 }

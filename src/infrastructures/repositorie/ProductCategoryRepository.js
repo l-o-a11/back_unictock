@@ -22,7 +22,7 @@ class ProductCategoryRepository {
       search,
       page = 1,
       limit = 10,
-      sortBy = "nombre",
+      sortBy = "createdAt",
       order = "asc",
     } = filters;
 
@@ -76,9 +76,8 @@ class ProductCategoryRepository {
 
   async update(id, changes) {
     const doc = await ProductCategoryModel
-      .findByIdAndUpdate(id, changes, {
+      .findByIdAndUpdate(id, { $set: changes }, {
         new: true,
-        runValidators: true,
       })
       .catch(() => null);
 

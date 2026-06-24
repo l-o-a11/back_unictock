@@ -11,7 +11,7 @@
  */
 
 const { Router } = require("express");
-const ctrl = require("../controllers/productCategory");
+const ctrl = require("../controllers/productCategoryController");
 const { requireAuth } = require("../../interfaces/middlewares/authMiddleware");
 
 const router = Router();

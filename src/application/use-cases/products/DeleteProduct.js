@@ -2,8 +2,9 @@
 // application/use-cases/products/DeleteProduct.js
 
 class DeleteProduct {
-  constructor(repo) {
+  constructor(repo, technicalSheetRepo) {
     this.repo = repo;
+    this.technicalSheetRepo = technicalSheetRepo;
   }
 
   async execute(id) {
@@ -15,14 +16,15 @@ class DeleteProduct {
       throw err;
     }
 
-    const products = await this.productRepo.findByCategoryId(id);
-
-    if (products.length > 0) {
-      const err = new Error(
-        "No se puede eliminar porque tiene fichas técnicas asociadas"
-      );
-      err.statusCode = 422;
-      throw err;
+    if (this.technicalSheetRepo) {
+      const sheets = await this.technicalSheetRepo.findByProductId(id);
+      if (sheets && sheets.length > 0) {
+        const err = new Error(
+          "No se puede eliminar porque tiene fichas técnicas asociadas"
+        );
+        err.statusCode = 422;
+        throw err;
+      }
     }
 
     return this.repo.delete(id);

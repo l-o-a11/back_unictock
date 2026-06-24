@@ -11,7 +11,14 @@ const serverError = (res, message = 'Internal Server Error') =>
   res.status(500).json({ success: false, error: message });
 
 module.exports = {
-  ok, created, noContent, badRequest,
-  unauthorized, forbidden, notFound,
-  conflict, unprocessable, serverError,
+  ok,
+  created,
+  noContent,
+  badRequest,
+  unauthorized,
+  forbidden,
+  notFound,
+  conflict,
+  unprocessable,
+  serverError,
 };

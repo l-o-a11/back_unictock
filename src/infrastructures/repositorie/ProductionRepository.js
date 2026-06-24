@@ -85,7 +85,17 @@ class ProductionRepository {
 
   async update(id, changes) {
     const doc = await ProductionOrderModel
-      .findByIdAndUpdate(id, changes, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, changes, { new: true, runValidators: true });
+    return this._toEntity(doc);
+  }
+
+  async addHistoryEntry(id, entry) {
+    const doc = await ProductionOrderModel
+      .findByIdAndUpdate(
+        id,
+        { $push: { historial: entry } },
+        { new: true, runValidators: true },
+      )
       .catch(() => null);
     return this._toEntity(doc);
   }
@@ -94,8 +104,14 @@ class ProductionRepository {
    * Anula la orden: setea estado "Anulada", guarda motivo
    * y agrega entrada al historial.
    */
-  async anular(id, motivo, id_usuario) {
-    const entry = { estado: 'Anulada', fecha: new Date(), id_usuario: id_usuario || null, motivo: motivo || null };
+  async anular(id, motivo, id_usuario, user) {
+    const entry = {
+      estado: 'Anulada',
+      fecha: new Date(),
+      id_usuario: id_usuario || null,
+      user: user || null,
+      motivo: motivo || null,
+    };
     const doc = await ProductionOrderModel.findByIdAndUpdate(
       id,
       { estado: 'Anulada', motivo_anulacion: motivo || null, $push: { historial: entry } },
@@ -107,12 +123,19 @@ class ProductionRepository {
   /**
    * Cambia el estado y registra el evento en el historial.
    */
-  async cambiarEstado(id, nuevoEstado, id_usuario) {
-    const entry = { estado: nuevoEstado, fecha: new Date(), id_usuario: id_usuario || null, motivo: null };
+  async cambiarEstado(id, nuevoEstado, id_usuario, user, extra = {}) {
+    const entry = {
+      estado: nuevoEstado,
+      fecha: new Date(),
+      id_usuario: id_usuario || null,
+      user: user || null,
+      motivo: null,
+    };
+    const updateDoc = { estado: nuevoEstado, ...extra, $push: { historial: entry } };
     const doc = await ProductionOrderModel.findByIdAndUpdate(
       id,
-      { estado: nuevoEstado, $push: { historial: entry } },
-      { new: true },
+      updateDoc,
+      { new: true, runValidators: true },
     ).catch(() => null);
     return this._toEntity(doc);
   }
