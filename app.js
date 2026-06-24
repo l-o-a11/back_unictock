@@ -20,6 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
 // API Routes - /api prefix for consistency
+app.use('/api/auth',  require('./src/infrastructures/routes/authRoutes'));
+app.use('/api/users', require('./src/infrastructures/routes/userRoutes'));
 app.use('/api/product-categories', require('./src/infrastructures/routes/productCategoryRoutes'));
 app.use('/api/products', require('./src/infrastructures/routes/productsRoutes'));
 app.use('/api/produccion', productionRoutes);
