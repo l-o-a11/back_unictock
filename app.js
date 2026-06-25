@@ -44,6 +44,13 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// 🔥 LOG GLOBAL DE TODAS LAS LLAMADAS
+app.use((req, res, next) => {
+  console.log(`\n🔥 [${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
+  console.log(`🔥 Body:`, req.body);
+  next();
+});
+
 // Health check
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 

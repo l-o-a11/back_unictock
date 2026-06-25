@@ -4,10 +4,18 @@ const ProductCategoryModel = require("../db/ProductCategoryModel");
 const ProductCategory = require("../../domain/entities/ProductCategory");
 
 class ProductCategoryRepository {
+  _normalizeDescription(obj = {}) {
+    return obj.descripcion ?? obj.descripción ?? obj.description ?? "";
+  }
+
   _toEntity(doc) {
     if (!doc) return null;
     const obj = doc.toObject ? doc.toObject() : doc;
-    return new ProductCategory({ ...obj, id: obj._id.toString() });
+    return new ProductCategory({
+      ...obj,
+      id: obj._id.toString(),
+      descripcion: this._normalizeDescription(obj),
+    });
   }
 
   /**
