@@ -220,6 +220,24 @@ const createOrderDetail = async (req, res) => {
 
     const useCase = new CreateOrderDetail(detailRepo, prodRepo);
     const detail  = await useCase.execute(payload);
+
+    // ✅ Si la orden ya está en etapa "Corte", asignar refCorte automáticamente
+    // al nuevo detalle — mismo mecanismo que al avanzar el estado a Corte.
+    if (!detail.refCorte) {
+      const order = await prodRepo.findById(payload.id_orden).catch(() => null);
+      if (order && order.estado === 'Corte') {
+        try {
+          const siguiente = (await detailRepo.countRefCorteByProducto(payload.id_producto)) + 1;
+          const refCorte  = `${payload.id_producto}-${siguiente}`;
+          await detailRepo.update(detail.id, { refCorte });
+          const updated = await detailRepo.findById(detail.id);
+          return created(res, updated);
+        } catch (e) {
+          console.warn('No se pudo asignar refCorte automáticamente:', e?.message);
+        }
+      }
+    }
+
     return created(res, detail);
   } catch (err) {
     if (err.statusCode === 400)  return badRequest(res, err.message);
@@ -229,7 +247,32 @@ const createOrderDetail = async (req, res) => {
   }
 };
 
-// ── Asignaciones ──────────────────────────────────────────────────────────────
+// ── DELETE /produccion/detalle-orden/:id ──────────────────────────────────────
+// Elimina un detalle de orden y registra la acción en el historial de la orden.
+const deleteOrderDetail = async (req, res) => {
+  try {
+    const detail = await detailRepo.findById(req.params.id);
+    if (!detail) return notFound(res, 'Detalle no encontrado');
+
+    const deleted = await detailRepo.delete(req.params.id);
+    if (!deleted) return notFound(res, 'No se pudo eliminar el detalle');
+
+    // Registrar en el historial de la orden
+    const userId   = req.user?.id || req.user?._id || null;
+    const userName = req.user?.nombreCompleto || req.user?.nombre || req.user?.username || 'Sistema';
+    await prodRepo.addHistoryEntry(detail.id_orden, {
+      estado:     'Referencia eliminada',
+      fecha:      new Date(),
+      id_usuario: userId,
+      user:       userName,
+      motivo:     `Artículo ${detail.id_producto} (${detail.color || 'sin color'}, ${detail.cantidad} uds) eliminado`,
+    }).catch(() => { /* no bloquear si el push falla */ });
+
+    return ok(res, { deleted: true });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
 
 const getAssignments = async (req, res) => {
   try {
@@ -286,6 +329,7 @@ module.exports = {
   getEstados,
   getOrderDetails,
   createOrderDetail,
+  deleteOrderDetail,
   getAssignments,
   createAssignment,
   getCalendario,

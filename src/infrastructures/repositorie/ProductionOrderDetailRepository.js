@@ -37,6 +37,18 @@ class ProductionOrderDetailRepository {
     return !!result;
   }
 
+  /**
+   * Cuenta cuántos detalles ya tienen refCorte asignado para un id_producto dado.
+   * Usado para calcular el consecutivo al asignar refCorte automáticamente.
+   */
+  async countRefCorteByProducto(id_producto) {
+    const regex = new RegExp(`^${id_producto}-\\d+$`);
+    return ProductionOrderDetailModel.countDocuments({
+      id_producto,
+      refCorte: { $regex: regex },
+    });
+  }
+
   /** Convierte un documento plano de Mongoose en un objeto serializable */
   _toPlain(doc) {
     if (!doc) return null;
@@ -47,6 +59,7 @@ class ProductionOrderDetailRepository {
       cantidad:    doc.cantidad,
       color:       doc.color || null,
       estado:      doc.estado !== false,
+      refCorte:    doc.refCorte || null,
       createdAt:   doc.createdAt,
       updatedAt:   doc.updatedAt,
       toJSON() { return { ...this }; },

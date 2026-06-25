@@ -6,6 +6,7 @@ const CreateSupplier     = require('../../application/use-cases/suppliers/Create
 const UpdateSupplier     = require('../../application/use-cases/suppliers/UpdateSupplier');
 const DeleteSupplier     = require('../../application/use-cases/suppliers/DeleteSupplier');
 const ToggleSupplier     = require('../../application/use-cases/suppliers/ToggleSupplier');
+const PurchaseModel      = require('../db/PurchaseModel');
 const {
   ok, created, badRequest, notFound, conflict, unprocessable, serverError,
 } = require('../../shared/utils/response');
@@ -104,6 +105,19 @@ const toggleSupplier = async (req, res) => {
   }
 };
 
+// ── GET /proveedores/:id/has-purchases ────────────────────────────────────────
+// Usado por el frontend para bloquear la edición del NIT cuando el proveedor
+// ya tiene compras asociadas.
+const checkSupplierHasPurchases = async (req, res) => {
+  try {
+    const count = await PurchaseModel.countDocuments({ proveedorId: req.params.id });
+    return ok(res, { hasPurchases: count > 0, count });
+  } catch (err) {
+    console.error('checkSupplierHasPurchases error:', err.message);
+    return serverError(res, err.message);
+  }
+};
+
 module.exports = {
   getSuppliers,
   getSupplierById,
@@ -111,4 +125,5 @@ module.exports = {
   updateSupplier,
   deleteSupplier,
   toggleSupplier,
+  checkSupplierHasPurchases,
 };

@@ -8,6 +8,9 @@ const productionOrderDetailSchema = new mongoose.Schema(
     cantidad:    { type: Number, required: true, min: 1 },
     color:       { type: String, trim: true, default: null },
     estado:      { type: Boolean, default: true },
+    // Referencia de corte con consecutivo (ej: "772-1", "772-2").
+    // Se asigna cuando la orden llega o ya está en etapa "Corte".
+    refCorte:    { type: String, default: null },
   },
   { timestamps: true },
 );
