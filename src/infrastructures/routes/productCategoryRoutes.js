@@ -16,6 +16,15 @@ const { requireAuth } = require("../../interfaces/middlewares/authMiddleware");
 
 const router = Router();
 
+// 🔥 DEBUG - Primer middleware
+router.use((req, res, next) => {
+  console.log('\n🔥 [ROUTE] Llamada a productCategoryRoutes');
+  console.log('🔥 Método:', req.method);
+  console.log('🔥 URL:', req.url);
+  console.log('🔥 Body:', req.body);
+  next();
+});
+
 router.use(requireAuth);
 
 // CRUD

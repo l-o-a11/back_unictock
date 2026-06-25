@@ -34,9 +34,13 @@ const productRepo = new ProductRepository();
 // ── GET /product-categories ─────────────────────────────────────────────
 const getProductCategories = async (req, res) => {
   try {
-    const result = await new GetProductCategories(repo).execute(req.query);
-    return ok(res, result);
+    const result = await repo.findAll(req.query);
+    return ok(res, {
+      ...result,
+      data: result.data.map(cat => cat.toJSON())
+    });
   } catch (err) {
+    console.error("Error en getProductCategories:", err);
     return serverError(res);
   }
 };
