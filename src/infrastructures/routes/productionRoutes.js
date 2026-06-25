@@ -45,6 +45,7 @@ router.patch('/ordenes/:id/anular', ctrl.anularOrder);
 // Detalles de orden
 router.get('/detalle-orden',        ctrl.getOrderDetails);
 router.post('/detalle-orden',       ctrl.createOrderDetail);
+router.delete('/detalle-orden/:id', ctrl.deleteOrderDetail);
 
 // Asignaciones de terceros
 router.get('/asignaciones',         ctrl.getAssignments);
