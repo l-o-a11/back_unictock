@@ -61,8 +61,8 @@ const aplicarIngresoStockPorEnvio = async (idOrden) => {
         console.warn(`[ProductionController] No se encontró producto con referencia "${referencia}" para sumar stock`);
         continue;
       }
-      const nuevoStock = Number(product.stock || 0) + cantidad;
-      await productRepo.update(product.id, { stock: nuevoStock });
+      // Suma atómica: toma el stock que el producto tenga en ese momento y le agrega la cantidad enviada
+      await productRepo.incrementStock(product.id, cantidad);
     }
   } catch (err) {
     console.error("[ProductionController] Error al actualizar stock por envío:", err);
