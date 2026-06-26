@@ -5,6 +5,7 @@
 const ProductionRepository            = require("../repositorie/ProductionRepository");
 const ProductionOrderDetailRepository = require("../repositorie/ProductionOrderDetailRepository");
 const ThirdPartyAssignmentRepository  = require("../repositorie/ThirdPartyAssignmentRepository");
+const ProductRepository               = require("../repositorie/ProductRepository");
 
 const AnularProduction       = require("../../application/use-cases/production/AnularProduction");
 const CambiarEstadoProduction = require("../../application/use-cases/production/CambiarEstadoProduction");
@@ -21,6 +22,7 @@ const { ok, created, badRequest, notFound, serverError } = require("../../shared
 const prodRepo       = new ProductionRepository();
 const detailRepo     = new ProductionOrderDetailRepository();
 const assignmentRepo = new ThirdPartyAssignmentRepository();
+const productRepo    = new ProductRepository();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,39 @@ const handleError = (res, err) => {
   console.error("[ProductionController]", err);
   const msg = process.env.NODE_ENV !== "production" ? err.message : undefined;
   return serverError(res, msg);
+};
+
+/**
+ * Al pasar una orden a "Enviado", se suman las cantidades de cada detalle
+ * (agrupadas por id_producto) al stock del producto correspondiente
+ * (los detalles guardan id_producto = referencia del producto, no el _id).
+ */
+const aplicarIngresoStockPorEnvio = async (idOrden) => {
+  try {
+    const detalles = await detailRepo.findAll({ id_orden: idOrden });
+    if (!detalles?.length) return;
+
+    // Agrupar cantidades por referencia de producto (puede haber varios colores)
+    const cantidadPorReferencia = new Map();
+    for (const d of detalles) {
+      const ref = d.id_producto;
+      if (!ref) continue;
+      cantidadPorReferencia.set(ref, (cantidadPorReferencia.get(ref) || 0) + Number(d.cantidad || 0));
+    }
+
+    for (const [referencia, cantidad] of cantidadPorReferencia.entries()) {
+      if (!cantidad) continue;
+      const product = await productRepo.findByReference(referencia).catch(() => null);
+      if (!product) {
+        console.warn(`[ProductionController] No se encontró producto con referencia "${referencia}" para sumar stock`);
+        continue;
+      }
+      const nuevoStock = Number(product.stock || 0) + cantidad;
+      await productRepo.update(product.id, { stock: nuevoStock });
+    }
+  } catch (err) {
+    console.error("[ProductionController] Error al actualizar stock por envío:", err);
+  }
 };
 
 // ── Órdenes ───────────────────────────────────────────────────────────────────
@@ -185,6 +220,12 @@ const cambiarEstado = async (req, res) => {
     const useCase = new CambiarEstadoProduction(prodRepo);
     const result  = await useCase.execute(req.params.id, estado, id_usuario, user, { force: !!force, extra: rest });
       console.log('[ProductionController] cambiarEstado result:', result && result.id ? result.id : result);
+
+    // Al confirmar el envío, los productos fabricados ingresan al stock
+    if (estado === "Enviado") {
+      await aplicarIngresoStockPorEnvio(req.params.id);
+    }
+
     return ok(res, result);
   } catch (err) {
     if (err.statusCode === 404) return notFound(res, err.message);
