@@ -74,6 +74,18 @@ class ProductRepository {
     return this._toEntity(doc);
   }
 
+  /**
+   * Suma (o resta, si cantidad es negativa) al stock actual del producto
+   * de forma atómica con $inc, evitando condiciones de carrera por
+   * lecturas desactualizadas del stock previo.
+   */
+  async incrementStock(id, cantidad) {
+    const doc = await ProductModel
+      .findByIdAndUpdate(id, { $inc: { stock: cantidad } }, { new: true, runValidators: true })
+      .catch(() => null);
+    return this._toEntity(doc);
+  }
+
   async delete(id) {
     const doc = await ProductModel.findByIdAndDelete(id).catch(() => null);
     return !!doc;
