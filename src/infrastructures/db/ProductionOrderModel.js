@@ -41,6 +41,8 @@ const productionOrderSchema = new mongoose.Schema(
     motivo_anulacion: { type: String, default: null },
     historial:        { type: [historialEntrySchema], default: [] },
     asignaciones:     { type: [mongoose.Schema.Types.Mixed], default: [] },
+    // ✅ Empleado responsable asignado por etapa: { Corte: {...}, Compras: {...}, Recepción: {...} }
+    empleadoAsignaciones: { type: mongoose.Schema.Types.Mixed, default: {} },
     tipo:             { type: String, default: null },
     referencia:       { type: String, default: null },
     producto:         { type: String, default: null },

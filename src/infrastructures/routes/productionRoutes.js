@@ -16,6 +16,8 @@
  *  GET    /produccion/asignaciones            — Listar asignaciones de terceros
  *  POST   /produccion/asignaciones            — Crear asignación
  *
+ *  GET    /produccion/empleados/carga         — Empleados activos + producciones asignadas
+ *
  *  GET    /produccion/calendario              — Eventos para FullCalendar
  *  GET    /produccion/alertas                 — Órdenes vencidas, por vencer y sin avance
  */
@@ -31,6 +33,7 @@ router.use(requireAuth); // asigna req.user (dev-user en dev, JWT en prod)
 router.get('/ordenes/estados',      ctrl.getEstados);
 router.get('/calendario',           ctrl.getCalendario);
 router.get('/alertas',              ctrl.getAlertas);
+router.get('/empleados/carga',      ctrl.getEmployeeWorkload);
 
 // CRUD órdenes
 router.get('/ordenes',              ctrl.getOrders);

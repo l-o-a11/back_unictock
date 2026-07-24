@@ -35,6 +35,9 @@ class Production {
     fromDamaged = false,
     originalOrderNumber = null,
     originalOrderStatus = null,
+    // ✅ Asignación de empleado responsable por etapa (Corte, Compras, Recepción)
+    // Forma: { [nombreEtapa]: { id_empleado, nombre_empleado, fecha } }
+    empleadoAsignaciones = {},
   }) {
     this.id               = id;
     this.numero_orden     = numero_orden;
@@ -58,6 +61,7 @@ class Production {
     this.fromDamaged      = fromDamaged;
     this.originalOrderNumber = originalOrderNumber;
     this.originalOrderStatus = originalOrderStatus;
+    this.empleadoAsignaciones = empleadoAsignaciones || {};
   }
 
   estaAnulada() {
@@ -99,6 +103,7 @@ class Production {
       fromDamaged:      this.fromDamaged,
       originalOrderNumber: this.originalOrderNumber,
       originalOrderStatus: this.originalOrderStatus,
+      empleadoAsignaciones: this.empleadoAsignaciones,
     };
   }
 }

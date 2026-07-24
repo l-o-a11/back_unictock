@@ -6,6 +6,11 @@ const ProductionRepository            = require("../repositorie/ProductionReposi
 const ProductionOrderDetailRepository = require("../repositorie/ProductionOrderDetailRepository");
 const ThirdPartyAssignmentRepository  = require("../repositorie/ThirdPartyAssignmentRepository");
 const ProductRepository               = require("../repositorie/ProductRepository");
+// ✅ Carga laboral de empleados (asignación de responsable en Corte/Compras/Recepción).
+// UserModel aquí es el modelo "mínimo" de solo lectura — el CRUD real vive en Api_Unistock,
+// pero ambos backends apuntan a la misma base de datos "unistock".
+const UserModel          = require("../db/UserModel");
+const ProductionOrderModel = require("../db/ProductionOrderModel");
 
 const AnularProduction       = require("../../application/use-cases/production/AnularProduction");
 const CambiarEstadoProduction = require("../../application/use-cases/production/CambiarEstadoProduction");
@@ -136,6 +141,7 @@ const updateOrder = async (req, res) => {
       "fecha_entrega",
       "id_usuario",
       "asignaciones",
+      "empleadoAsignaciones",
       "tipo",
       "referencia",
       "producto",
@@ -335,6 +341,59 @@ const createAssignment = async (req, res) => {
 };
 
 
+// ── Carga laboral de empleados (para asignar responsable en Corte/Compras/Recepción) ──
+
+// Estados que ya no cuentan como "carga activa" para un empleado
+const ESTADOS_FINALIZADOS = ["Enviado", "Anulada"];
+
+/**
+ * GET /produccion/empleados/carga
+ * Devuelve los usuarios activos junto con la cantidad de órdenes de producción
+ * activas (no Enviado/Anulada) en las que están asignados como responsables
+ * de alguna etapa (Corte, Compras, Recepción, etc.), para poder repartir
+ * la carga de trabajo al asignar un nuevo responsable.
+ */
+const getEmployeeWorkload = async (req, res) => {
+  try {
+    const employees = await UserModel.find({ estado: true })
+      .select("_id nombre correo")
+      .sort({ nombre: 1 })
+      .lean();
+
+    const activeOrders = await ProductionOrderModel.find(
+      { estado: { $nin: ESTADOS_FINALIZADOS } },
+      { empleadoAsignaciones: 1 },
+    ).lean();
+
+    // Por cada orden activa, un mismo empleado solo cuenta una vez
+    // aunque esté asignado en más de una etapa de esa orden.
+    const countByEmployeeId = new Map();
+    for (const order of activeOrders) {
+      const asignaciones = order.empleadoAsignaciones || {};
+      const idsEnEstaOrden = new Set(
+        Object.values(asignaciones)
+          .map((a) => a && a.id_empleado)
+          .filter(Boolean)
+          .map(String),
+      );
+      idsEnEstaOrden.forEach((id) => {
+        countByEmployeeId.set(id, (countByEmployeeId.get(id) || 0) + 1);
+      });
+    }
+
+    const result = employees.map((u) => ({
+      id: String(u._id),
+      nombre: u.nombre,
+      correo: u.correo,
+      produccionesAsignadas: countByEmployeeId.get(String(u._id)) || 0,
+    }));
+
+    return ok(res, result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 // ── Calendario ────────────────────────────────────────────────────────────────
 
 const getCalendario = async (req, res) => {
@@ -373,6 +432,7 @@ module.exports = {
   deleteOrderDetail,
   getAssignments,
   createAssignment,
+  getEmployeeWorkload,
   getCalendario,
   getAlertas,
 };
