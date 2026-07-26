@@ -6,10 +6,15 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    nombre:    { type: String, required: true, trim: true },
+    // `nombreCompleto` es el campo del servicio de usuarios actual; `nombre`
+    // se conserva para registros legados de este backend.
+    nombre:    { type: String, trim: true },
+    nombreCompleto: { type: String, trim: true },
     correo:    { type: String, required: true, unique: true, lowercase: true, trim: true },
     password:  { type: String, required: true },
     rolId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
+    // Un empleado puede ser responsable de varias etapas de producción.
+    cargo:     { type: [String], default: [] },
     estado:    { type: Boolean, default: true },
   },
   { timestamps: true },

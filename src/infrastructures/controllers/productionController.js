@@ -355,9 +355,17 @@ const ESTADOS_FINALIZADOS = ["Enviado", "Anulada"];
  */
 const getEmployeeWorkload = async (req, res) => {
   try {
-    const employees = await UserModel.find({ estado: true })
-      .select("_id nombre correo")
-      .sort({ nombre: 1 })
+    const cargo = typeof req.query.cargo === "string" ? req.query.cargo.trim() : "";
+    const employeeFilter = { estado: true };
+
+    // El cargo es el nombre de la etapa (p. ej. Corte o Recepción). Se usa una
+    // expresión regular anclada e insensible a mayúsculas para no mezclar
+    // empleados de otras etapas ni fallar por diferencias de capitalización.
+    if (cargo) employeeFilter.cargo = { $regex: `^${cargo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
+
+    const employees = await UserModel.find(employeeFilter)
+      .select("_id nombre nombreCompleto correo cargo")
+      .sort({ nombreCompleto: 1, nombre: 1 })
       .lean();
 
     const activeOrders = await ProductionOrderModel.find(
@@ -383,8 +391,9 @@ const getEmployeeWorkload = async (req, res) => {
 
     const result = employees.map((u) => ({
       id: String(u._id),
-      nombre: u.nombre,
+      nombre: u.nombreCompleto || u.nombre,
       correo: u.correo,
+      cargo: u.cargo,
       produccionesAsignadas: countByEmployeeId.get(String(u._id)) || 0,
     }));
 
