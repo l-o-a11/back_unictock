@@ -44,6 +44,7 @@ router.put('/ordenes/:id',          ctrl.updateOrder);
 // Transiciones de estado
 router.patch('/ordenes/:id/estado', ctrl.cambiarEstado);
 router.patch('/ordenes/:id/anular', ctrl.anularOrder);
+router.post('/ordenes/:id/historial', ctrl.agregarHistorial);
 
 // Detalles de orden
 router.get('/detalle-orden',        ctrl.getOrderDetails);
