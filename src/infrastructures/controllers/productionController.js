@@ -2,10 +2,13 @@
 // src/infrastructure/controllers/productionController.js
 // ─────────────────────────────────────────────────────────────────────────────
 
+const mongoose = require("mongoose");
+
 const ProductionRepository            = require("../repositorie/ProductionRepository");
 const ProductionOrderDetailRepository = require("../repositorie/ProductionOrderDetailRepository");
 const ThirdPartyAssignmentRepository  = require("../repositorie/ThirdPartyAssignmentRepository");
 const ProductRepository               = require("../repositorie/ProductRepository");
+const TechnicalSheetRepository        = require("../repositorie/TechnicalSheetRepository");
 // ✅ Carga laboral de empleados (asignación de responsable en Corte/Compras/Recepción).
 // UserModel aquí es el modelo "mínimo" de solo lectura — el CRUD real vive en Api_Unistock,
 // pero ambos backends apuntan a la misma base de datos "unistock".
@@ -113,11 +116,64 @@ const createOrder = async (req, res) => {
     if (!fecha_entrega || !cliente)
       return badRequest(res, "Los campos fecha_entrega y cliente son requeridos");
 
+    // 🐛 FIX: este createOrder ignoraba por completo el campo "tipo" que
+    // manda el frontend y SIEMPRE creaba la orden en estado "Diseño" —
+    // incluso las de tipo "produccion" (artículo con ficha técnica YA
+    // EXISTENTE, elegido de un producto del catálogo), que deben arrancar
+    // directamente en "Ficha Técnica" (el "Diseño" se da por completado
+    // automáticamente porque ya existe) para que el flujo respete el orden
+    // real de las etapas: Diseño → Ficha Técnica → Corte → ... En Api/src
+    // (puerto 3000) esta lógica ya existía correctamente; aquí faltaba.
+    const tipo = req.body.tipo || req.body.type || "produccion";
+    const referencia = req.body.referencia || req.body.reference || null;
+    const producto = req.body.producto || req.body.product || null;
+    const designImages = Array.isArray(req.body.designImages) ? req.body.designImages : [];
+    const fromDamaged = req.body.fromDamaged === true || req.body.fromDamaged === "true";
+    const originalOrderNumber = req.body.originalOrderNumber || req.body.original_order_number || null;
+    const originalOrderStatus = req.body.originalOrderStatus || req.body.original_order_status || null;
+
+    let techSpecification = req.body.techSpecification || req.body.techSheet || null;
+    const isProduccion = tipo === "produccion";
+
+    // Las órdenes tipo "produccion" referencian un producto que YA tiene
+    // ficha técnica registrada — se busca y se copia dentro de la orden
+    // para que quede disponible de inmediato en la etapa "Ficha Técnica".
+    if (isProduccion && !techSpecification && referencia) {
+      let product = null;
+      const refTrimmed = String(referencia).trim();
+      if (mongoose.isValidObjectId(refTrimmed)) {
+        product = await productRepo.findById(refTrimmed).catch(() => null);
+      }
+      if (!product) product = await productRepo.findByReference(refTrimmed).catch(() => null);
+      if (!product && refTrimmed !== referencia) {
+        product = await productRepo.findByReference(referencia).catch(() => null);
+      }
+      if (product) {
+        const specs = await techSheetRepo.findByProductId(product.id).catch(() => []);
+        const activeSpec = specs && specs.length ? specs[0] : null;
+        if (activeSpec) techSpecification = activeSpec;
+      }
+    }
+
+    const estadoInicial = isProduccion ? "Ficha Técnica" : "Diseño";
+
     const order = await prodRepo.create({
       fecha_entrega,
       cliente,
       id_usuario: userId,
-      estado: "Diseño",
+      tipo,
+      producto,
+      referencia,
+      techSpecification,
+      designImages,
+      fromDamaged,
+      originalOrderNumber,
+      originalOrderStatus,
+      estado: estadoInicial,
+      // "Diseño" se registra como paso automático completado cuando la
+      // orden arranca directo en "Ficha Técnica" (tipo producción), igual
+      // que hace Api/src, para que el historial/stepper no muestre un
+      // salto de etapa.
       historial: [{ estado: "Diseño", fecha: new Date(), id_usuario: userId, motivo: null }],
     });
     return created(res, order.toJSON());
@@ -418,11 +474,30 @@ const getCalendario = async (req, res) => {
 
 // ── Alertas ───────────────────────────────────────────────────────────────────
 
-const getAlertas = async (req, res) => {
+const getAlertas = async (req, res) => { 
   try {
     const useCase = new GetAlertasProduction(prodRepo);
     const result  = await useCase.execute();
     return ok(res, result);
+  } catch (err) {
+    return handleError(res, err);
+  }}
+const agregarHistorial = async (req, res) => {
+  try {
+    const { motivo, estado } = req.body;
+    const userId = req.body.id_usuario || req.user?.id || req.user?.nombre || "Sistema";
+    const user = req.body.user || req.user?.nombre || "Sistema";
+    const order = await prodRepo.findById(req.params.id);
+    if (!order) return notFound(res, "Orden no encontrada");
+    const estadoRegistro = estado || order.estado;
+    const updated = await prodRepo.addHistoryEntry(req.params.id, {
+      estado: estadoRegistro,
+      fecha: new Date(),
+      id_usuario: userId,
+      user,
+      motivo,
+    });
+    return ok(res, updated ? updated.toJSON() : order.toJSON());
   } catch (err) {
     return handleError(res, err);
   }
@@ -444,4 +519,5 @@ module.exports = {
   getEmployeeWorkload,
   getCalendario,
   getAlertas,
+  agregarHistorial,
 };
